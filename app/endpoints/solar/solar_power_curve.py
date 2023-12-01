@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter
 from dateutil.parser import parse
 from pydantic import BaseModel, Field
-from falcon_db.solar import Solar
+from core.solar import Solar
 import pandas as pd
 import numpy as np
 

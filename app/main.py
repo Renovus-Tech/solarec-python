@@ -1,5 +1,5 @@
 
-from graphs.solar import solar_overview, solar_climate, solar_performance, solar_power_curve
+from endpoints.solar import solar_overview, solar_climate, solar_performance, solar_power_curve
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse

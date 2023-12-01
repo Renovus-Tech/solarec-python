@@ -1,11 +1,11 @@
 import json
 from datetime import timedelta, datetime
 from typing import List
-from falcon_db.utils import group_by_to_pd_frequency
+from db.utils import group_by_to_pd_frequency
 from fastapi import APIRouter, HTTPException
 from dateutil.parser import parse
 from pydantic import BaseModel, Field
-from falcon_db.solar import Solar
+from core.solar import Solar
 
 router = APIRouter(
     prefix="/solar/climate",

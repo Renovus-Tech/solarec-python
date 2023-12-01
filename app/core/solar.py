@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 from typing import List
 import numpy as np
 import pandas as pd
-from falcon_db.utils import get_gen_codes_and_names, get_gen_datas_grouped, get_gen_ids_by_loc_id, get_period_end, get_sta_datas_grouped, get_sta_id_by_loc_id, get_loc_output_capacity
-from falcon_db.db import session
+from db.utils import get_gen_codes_and_names, get_gen_datas_grouped, get_gen_ids_by_loc_id, get_period_end, get_sta_datas_grouped, get_sta_id_by_loc_id, get_loc_output_capacity
+from db.db import session
 
 
 class Solar():

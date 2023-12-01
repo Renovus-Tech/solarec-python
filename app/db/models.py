@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, Integer, String, DateTime, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import ForeignKey
 
-from .db import Base
+from db.db import Base
 
 
 class Client(Base):
@@ -18,7 +18,8 @@ class Client(Base):
 class Location(Base):
     __tablename__ = "location"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
     loc_id_auto = Column(Integer, primary_key=True)
     data_def_id = Column(Integer)
     loc_name = Column(String)
@@ -38,7 +39,8 @@ class Location(Base):
 class Station(Base):
     __tablename__ = "station"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
     sta_id_auto = Column(Integer, primary_key=True)
     data_def_id = Column(Integer)
     loc_id = Column(Integer, ForeignKey("location.loc_id_auto"))
@@ -55,7 +57,8 @@ class Station(Base):
 class Generator(Base):
     __tablename__ = "generator"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
     gen_id_auto = Column(Integer, primary_key=True)
     data_def_id = Column(Integer)
     loc_id = Column(Integer, ForeignKey("location.loc_id"))
@@ -76,11 +79,14 @@ class Generator(Base):
 class GenData(Base):
     __tablename__ = "gen_data"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    gen_id = Column(Integer, ForeignKey("generator.gen_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    gen_id = Column(Integer, ForeignKey(
+        "generator.gen_id_auto"), primary_key=True)
     data_date = Column(DateTime, primary_key=True)
     data_type_id = Column(Integer, primary_key=True)
-    data_pro_id = Column(Integer, ForeignKey("data_processing.data_pro_id_auto"))
+    data_pro_id = Column(Integer, ForeignKey(
+        "data_processing.data_pro_id_auto"))
     data_value = Column(Float)
     data_date_added = Column(DateTime(timezone=True))
 
@@ -88,11 +94,14 @@ class GenData(Base):
 class StaData(Base):
     __tablename__ = "sta_data"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    sta_id = Column(Integer, ForeignKey("station.sta_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    sta_id = Column(Integer, ForeignKey(
+        "station.sta_id_auto"), primary_key=True)
     data_date = Column(DateTime, primary_key=True)
     data_type_id = Column(Integer, primary_key=True)
-    data_pro_id = Column(Integer, ForeignKey("data_processing.data_pro_id_auto"))
+    data_pro_id = Column(Integer, ForeignKey(
+        "data_processing.data_pro_id_auto"))
     data_value = Column(Float)
     data_date_added = Column(DateTime(timezone=True))
 
@@ -100,11 +109,14 @@ class StaData(Base):
 class LocData(Base):
     __tablename__ = "loc_data"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    loc_id = Column(Integer, ForeignKey("location.loc_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    loc_id = Column(Integer, ForeignKey(
+        "location.loc_id_auto"), primary_key=True)
     data_date = Column(DateTime, primary_key=True)
     data_type_id = Column(Integer, primary_key=True)
-    data_pro_id = Column(Integer, ForeignKey("data_processing.data_pro_id_auto"))
+    data_pro_id = Column(Integer, ForeignKey(
+        "data_processing.data_pro_id_auto"))
     data_value = Column(Float)
     data_date_added = Column(DateTime(timezone=True))
 
@@ -112,8 +124,10 @@ class LocData(Base):
 class GenPower(Base):
     __tablename__ = "gen_power"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    gen_id = Column(Integer, ForeignKey("generator.gen_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    gen_id = Column(Integer, ForeignKey(
+        "generator.gen_id_auto"), primary_key=True)
     pwr_wind_speed = Column(Float, primary_key=True)
     pwr_air_density = Column(Float, primary_key=True)
     gen_power = Column(Float)
@@ -158,11 +172,14 @@ class DataType(Base):
 class LocStatistic(Base):
     __tablename__ = "loc_statistic"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    loc_id = Column(Integer, ForeignKey("location.loc_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    loc_id = Column(Integer, ForeignKey(
+        "location.loc_id_auto"), primary_key=True)
     stat_date = Column(DateTime(timezone=True), primary_key=True)
     stat_type_id = Column(Integer, primary_key=True)
-    stat_pro_id = Column(Integer, ForeignKey("stat_processing.stat_pro_id_auto"))
+    stat_pro_id = Column(Integer, ForeignKey(
+        "stat_processing.stat_pro_id_auto"))
     stat_value = Column(Float)
     stat_date_added = Column(DateTime(timezone=True))
 
@@ -170,79 +187,98 @@ class LocStatistic(Base):
 class GenAlarm(Base):
     __tablename__ = "gen_alarm"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    gen_id = Column(Integer, ForeignKey("generator.gen_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    gen_id = Column(Integer, ForeignKey(
+        "generator.gen_id_auto"), primary_key=True)
     alarm_code = Column(Float, primary_key=True)
     alarm_description = Column(String)
-    data_cat_id = Column(Integer, ForeignKey("data_category.data_cat_id_auto"), primary_key=True)
+    data_cat_id = Column(Integer, ForeignKey(
+        "data_category.data_cat_id_auto"), primary_key=True)
 
 
 class LocGenAlarm(Base):
     __tablename__ = "loc_gen_alarm"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    loc_id = Column(Integer, ForeignKey("location.loc_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    loc_id = Column(Integer, ForeignKey(
+        "location.loc_id_auto"), primary_key=True)
     alarm_code = Column(Float, primary_key=True)
     alarm_description = Column(String)
-    data_cat_id = Column(Integer, ForeignKey("data_category.data_cat_id_auto"), primary_key=True)
+    data_cat_id = Column(Integer, ForeignKey(
+        "data_category.data_cat_id_auto"), primary_key=True)
 
 
 class CliGenAlarm(Base):
     __tablename__ = "cli_gen_alarm"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
     alarm_code = Column(Float, primary_key=True)
     alarm_description = Column(String)
-    data_cat_id = Column(Integer, ForeignKey("data_category.data_cat_id_auto"), primary_key=True)
+    data_cat_id = Column(Integer, ForeignKey(
+        "data_category.data_cat_id_auto"), primary_key=True)
 
 
 class GenAlert(Base):
     __tablename__ = "gen_alert"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    gen_id = Column(Integer, ForeignKey("generator.gen_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    gen_id = Column(Integer, ForeignKey(
+        "generator.gen_id_auto"), primary_key=True)
     alert_def_id = Column(
         Integer, ForeignKey("alert_definition.alert_def_id_auto"), primary_key=True
     )
     alert_date_added = Column(DateTime(timezone=True), primary_key=True)
     alert_date_send = Column(DateTime(timezone=True))
     alert_message = Column(String, primary_key=True)
-    alert_pro_id = Column(Integer, ForeignKey("alert_processing.alert_pro_id_auto"))
+    alert_pro_id = Column(Integer, ForeignKey(
+        "alert_processing.alert_pro_id_auto"))
 
 
 class LocAlert(Base):
     __tablename__ = "loc_alert"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    loc_id = Column(Integer, ForeignKey("location.loc_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    loc_id = Column(Integer, ForeignKey(
+        "location.loc_id_auto"), primary_key=True)
     alert_def_id = Column(
         Integer, ForeignKey("alert_definition.alert_def_id_auto"), primary_key=True
     )
     alert_date_added = Column(DateTime(timezone=True), primary_key=True)
     alert_date_send = Column(DateTime(timezone=True))
     alert_message = Column(String, primary_key=True)
-    alert_pro_id = Column(Integer, ForeignKey("alert_processing.alert_pro_id_auto"))
+    alert_pro_id = Column(Integer, ForeignKey(
+        "alert_processing.alert_pro_id_auto"))
 
 
 class StaAlert(Base):
     __tablename__ = "sta_alert"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    sta_id = Column(Integer, ForeignKey("station.sta_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    sta_id = Column(Integer, ForeignKey(
+        "station.sta_id_auto"), primary_key=True)
     alert_def_id = Column(
         Integer, ForeignKey("alert_definition.alert_def_id_auto"), primary_key=True
     )
     alert_date_added = Column(DateTime(timezone=True), primary_key=True)
     alert_date_send = Column(DateTime(timezone=True))
     alert_message = Column(String, primary_key=True)
-    alert_pro_id = Column(Integer, ForeignKey("alert_processing.alert_pro_id_auto"))
+    alert_pro_id = Column(Integer, ForeignKey(
+        "alert_processing.alert_pro_id_auto"))
 
 
 class LocEstimation(Base):
     __tablename__ = "loc_estimation"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    loc_id = Column(Integer, ForeignKey("location.loc_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    loc_id = Column(Integer, ForeignKey(
+        "location.loc_id_auto"), primary_key=True)
     loc_est_id_auto = Column(Integer, primary_key=True)
     loc_est_order = Column(Integer)
     loc_est_title = Column(String)
@@ -263,9 +299,12 @@ class LocEstimation(Base):
 class LocDataMdlMlSanitized(Base):
     __tablename__ = "loc_data_mdl_ml_sanitized"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    loc_id = Column(Integer, ForeignKey("location.loc_id_auto"), primary_key=True)
-    data_pro_id = Column(Integer, ForeignKey("data_processing.data_pro_id_auto"))
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    loc_id = Column(Integer, ForeignKey(
+        "location.loc_id_auto"), primary_key=True)
+    data_pro_id = Column(Integer, ForeignKey(
+        "data_processing.data_pro_id_auto"))
     data_stat_id = Column(Integer)
     data_date = Column(DateTime, primary_key=True)
     data_value_401 = Column(Float)
@@ -276,10 +315,14 @@ class LocDataMdlMlSanitized(Base):
 class GenDataMdlMlSanitized(Base):
     __tablename__ = "gen_data_mdl_ml_sanitized"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    loc_id = Column(Integer, ForeignKey("location.loc_id_auto"), primary_key=True)
-    gen_id = Column(Integer, ForeignKey("generator.gen_id_auto"), primary_key=True)
-    data_pro_id = Column(Integer, ForeignKey("data_processing.data_pro_id_auto"))
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    loc_id = Column(Integer, ForeignKey(
+        "location.loc_id_auto"), primary_key=True)
+    gen_id = Column(Integer, ForeignKey(
+        "generator.gen_id_auto"), primary_key=True)
+    data_pro_id = Column(Integer, ForeignKey(
+        "data_processing.data_pro_id_auto"))
     data_stat_id = Column(Integer)
     data_date = Column(DateTime, primary_key=True)
     data_value_201 = Column(Float)
@@ -293,10 +336,14 @@ class GenDataMdlMlSanitized(Base):
 class StaDataMdlMlSanitized(Base):
     __tablename__ = "sta_data_mdl_ml_sanitized"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    loc_id = Column(Integer, ForeignKey("location.loc_id_auto"), primary_key=True)
-    sta_id = Column(Integer, ForeignKey("station.sta_id_auto"), primary_key=True)
-    data_pro_id = Column(Integer, ForeignKey("data_processing.data_pro_id_auto"))
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    loc_id = Column(Integer, ForeignKey(
+        "location.loc_id_auto"), primary_key=True)
+    sta_id = Column(Integer, ForeignKey(
+        "station.sta_id_auto"), primary_key=True)
+    data_pro_id = Column(Integer, ForeignKey(
+        "data_processing.data_pro_id_auto"))
     data_stat_id = Column(Integer)
     data_date = Column(DateTime, primary_key=True)
     data_value_303 = Column(Float)
@@ -308,9 +355,12 @@ class StaDataMdlMlSanitized(Base):
 class GenNeighbour(Base):
     __tablename__ = "gen_neighbour"
 
-    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
-    gen_id = Column(Integer, ForeignKey("generator.gen_id_auto"), primary_key=True)
-    gen_id_neighbour = Column(Integer, ForeignKey("generator.gen_id_auto"), primary_key=True)
+    cli_id = Column(Integer, ForeignKey(
+        "client.cli_id_auto"), primary_key=True)
+    gen_id = Column(Integer, ForeignKey(
+        "generator.gen_id_auto"), primary_key=True)
+    gen_id_neighbour = Column(Integer, ForeignKey(
+        "generator.gen_id_auto"), primary_key=True)
     gen_id_neighbour_position = Column(Integer, primary_key=True)
 
 

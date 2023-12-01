@@ -3,7 +3,7 @@ import datetime
 import pandas as pd
 from typing import Dict, List
 from dateutil.relativedelta import relativedelta, SU
-from falcon_db.models import (
+from db.models import (
     Location,
     Station,
     Generator,
