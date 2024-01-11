@@ -381,3 +381,26 @@ class LocDataWeather(Base):
     data_type_id = Column(Integer, primary_key=True)
     data_value = Column(Float)
     data_date_added = Column(DateTime(timezone=True), primary_key=True)
+
+class CliSetting(Base):
+    __tablename__ = "cli_setting"
+
+    cli_id = Column(Integer, ForeignKey("client.cli_id"), primary_key=True)
+    cli_set_name = Column(String, primary_key=True)
+    cli_set_value = Column(String)
+
+
+class CliGenAlert(Base):
+    __tablename__ = "cli_gen_alert"
+
+    cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
+    gen_id = Column(Integer, ForeignKey("generator.gen_id_auto"), primary_key=True)
+    cli_gen_alert_id_auto = Column(Integer, primary_key=True)
+    cli_gen_alert_added = Column(DateTime(timezone=True))
+    cli_gen_alert_type = Column(Integer)
+    cli_gen_alert_data = Column(String)
+    cli_gen_alert_flags = Column(String)
+
+
+
+    
