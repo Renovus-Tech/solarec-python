@@ -3,7 +3,10 @@ import datetime
 import pandas as pd
 from typing import Dict, List
 from dateutil.relativedelta import relativedelta, SU
+from sqlalchemy.dialects.postgresql import insert
 from db.models import (
+    CliGenAlert,
+    CliSetting,
     Location,
     Station,
     Generator,
@@ -235,3 +238,22 @@ def get_loc_output_capacity(session, locId: int):
         .filter(Location.loc_id_auto == locId)
         .first()[0]
     )
+
+
+def get_client_settings(session, cli_id: int):
+    df = pd.read_sql(
+        session.query(CliSetting.cli_set_name, CliSetting.cli_set_value)
+        .filter(CliSetting.cli_id == cli_id)
+        .statement, session.bind     
+    )
+    return df.set_index('cli_set_name', drop=True)
+
+
+def insert_cli_gen_alerts(session, rows_to_insert: List[Dict]) -> int:
+    # ToDo: probably would need to remove exisiting alerts first
+    if len(rows_to_insert) > 0:
+        statement = insert(CliGenAlert).values(rows_to_insert)
+        session.execute(statement)
+        session.commit()
+
+    return len(rows_to_insert)
