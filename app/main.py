@@ -1,5 +1,5 @@
 
-from endpoints.solar import solar_overview, solar_climate, solar_performance, solar_power_curve
+from endpoints.solar import solar_overview, solar_climate, solar_performance, solar_power_curve, solar_alerts
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -43,6 +43,7 @@ app.include_router(solar_overview.router)
 app.include_router(solar_climate.router)
 app.include_router(solar_performance.router)
 app.include_router(solar_power_curve.router)
+app.include_router(solar_alerts.router)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=5000)

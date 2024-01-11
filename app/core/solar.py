@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import List
 import numpy as np
 import pandas as pd
-from db.utils import get_gen_codes_and_names, get_gen_datas_grouped, get_gen_ids_by_loc_id, get_period_end, get_sta_datas_grouped, get_sta_id_by_loc_id, get_loc_output_capacity
+from db.utils import get_gen_codes_and_names, get_gen_datas_grouped, get_gen_ids_by_loc_id, get_period_end, get_sta_datas_grouped, get_sta_id_by_loc_id, get_loc_output_capacity, insert_cli_gen_alerts
 from db.db import session
 
 
@@ -81,12 +81,14 @@ class Solar():
         self.data['time_based_availability'] = (
             self.data['power'] == 0) & (self.data['irradiation'] > 0)
         self.data['count'] = 1
+        self.data['is_missing'] = self.data['power'].isna()
 
     def _compute_agg_by_loc_and_period_calculated_columns(self):
         self.data_aggregated_by_loc_and_period['loc_specific_yield'] = self.data_aggregated_by_loc_and_period['ac_production'] / (
             self.loc_total_capacity / 1000)
         self.data_aggregated_by_loc_and_period['loc_performance_ratio'] = self.data_aggregated_by_loc_and_period.apply(
             lambda x: x['loc_specific_yield']/x['irradiation'] * 100 if x['irradiation'] != 0 else np.nan, axis=1)
+
         self.data_aggregated_by_loc_and_period.fillna(0, inplace=True)
         self.data_aggregated_by_loc_and_period['to'] = self.data_aggregated_by_loc_and_period.apply(
             self._get_group_period_end_date, axis=1)
@@ -128,7 +130,7 @@ class Solar():
             self.fetch_data()
 
         agg = {'power': 'sum', 'ac_production': 'sum', 'avg_ambient_temp': 'mean', 'avg_module_temp': 'mean',
-               'irradiation': 'sum', 'time_based_availability': self._get_agg_unavailable, 'from': 'first', 'count': 'sum'}
+               'irradiation': 'sum', 'time_based_availability': self._get_agg_unavailable, 'from': 'first', 'count': 'sum', 'is_missing': 'sum'}
 
         self.data_aggregated_by_period = self.data.reset_index().set_index(
             'data_date').groupby(['gen_id', pd.Grouper(freq=self.freq)]).agg(agg)
@@ -146,3 +148,4 @@ class Solar():
             'data_date').agg(agg)
 
         self._compute_agg_by_loc_and_period_calculated_columns()
+
