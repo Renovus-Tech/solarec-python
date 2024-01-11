@@ -395,7 +395,7 @@ class CliGenAlert(Base):
 
     cli_id = Column(Integer, ForeignKey("client.cli_id_auto"), primary_key=True)
     gen_id = Column(Integer, ForeignKey("generator.gen_id_auto"), primary_key=True)
-    cli_gen_alert_id_auto = Column(Integer, primary_key=True)
+    cli_gen_alert_id_auto = Column(Integer, primary_key=True, autoincrement=True)
     cli_gen_alert_added = Column(DateTime(timezone=True))
     cli_gen_alert_type = Column(Integer)
     cli_gen_alert_data = Column(String)
