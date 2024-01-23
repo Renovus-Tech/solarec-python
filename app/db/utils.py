@@ -249,8 +249,15 @@ def get_client_settings(session, cli_id: int):
     return df.set_index('cli_set_name', drop=True)
 
 
-def insert_cli_gen_alerts(session, rows_to_insert: List[Dict]) -> int:
-    # ToDo: probably would need to remove exisiting alerts first
+def insert_cli_gen_alerts(session, cli_id: int, gen_ids: List[int], datetime_start: datetime.datetime, datetime_end: datetime.datetime, rows_to_insert: List[Dict]) -> int:
+    
+    session.query(CliGenAlert).filter(
+        CliGenAlert.cli_id == cli_id,
+        CliGenAlert.gen_id.in_(gen_ids),
+        CliGenAlert.cli_gen_alert_trigger >= datetime_start,
+        CliGenAlert.cli_gen_alert_trigger < datetime_end
+    ).delete()
+
     if len(rows_to_insert) > 0:
         statement = insert(CliGenAlert).values(rows_to_insert)
         session.execute(statement)

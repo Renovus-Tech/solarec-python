@@ -400,6 +400,7 @@ class CliGenAlert(Base):
     cli_gen_alert_type = Column(Integer)
     cli_gen_alert_data = Column(String)
     cli_gen_alert_flags = Column(String)
+    cli_gen_alert_trigger = Column(DateTime(timezone=True))
 
 
 
