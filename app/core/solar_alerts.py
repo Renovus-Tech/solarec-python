@@ -1,7 +1,8 @@
 from datetime import datetime
 import json
+from typing import List, Optional, Tuple
 from core.solar import Solar
-from db.utils import get_client_settings, insert_cli_gen_alerts
+from db.utils import get_client_settings, get_gen_ids_by_data_pro_id, insert_cli_gen_alerts
 from db.db import session
 
 ALERT_DATA_TYPE = 1
@@ -10,9 +11,15 @@ ALERT_2_DEFAULT_THRESHOLD = 94
 ALERT_3_DEFAULT_THRESHOLD = 90
 MAX_DATA_PER_DAY = 24 * 60 / 15
 
-def calculate_alerts(cli_id: int, loc_id: int, datetime_start: datetime, datetime_end: datetime):
+def calculate_alerts(datetime_start: Optional[datetime], datetime_end: Optional[datetime], data_pro_id: Optional[int] = None, cli_id: Optional[int] = None, loc_id: Optional[int] = None) -> Tuple[int, int, List[int], datetime, datetime, int]:
 
-    solar = Solar(cli_id=cli_id, loc_id=loc_id,datetime_start=datetime_start, datetime_end=datetime_end, freq='1D', gen_ids=None, sta_id=None)
+    if not data_pro_id and not (cli_id and loc_id and datetime_start and datetime_end):
+        raise ValueError('Invalid parameters: either data_pro_id or cli_id, loc_id, datetime_start and datetime_end must be provided')
+    gen_ids = None
+    if data_pro_id:
+        cli_id, loc_id, gen_ids, datetime_start, datetime_end = get_gen_ids_by_data_pro_id(session, data_pro_id)
+
+    solar = Solar(cli_id=cli_id, loc_id=loc_id,datetime_start=datetime_start, datetime_end=datetime_end, freq='1D', gen_ids=gen_ids, sta_id=None)
     solar.fetch_aggregated_by_period()
     data = solar.data_aggregated_by_period
     
@@ -59,6 +66,6 @@ def calculate_alerts(cli_id: int, loc_id: int, datetime_start: datetime, datetim
 
     insert_cli_gen_alerts(session, cli_id,  solar.gen_ids, datetime_start, datetime_end, rows_to_insert)     
 
-    return len(rows_to_insert)
+    return cli_id, loc_id, solar.gen_ids, datetime_start, datetime_end, len(rows_to_insert)
 
     

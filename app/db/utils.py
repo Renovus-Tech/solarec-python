@@ -1,7 +1,7 @@
 import time
 import datetime
 import pandas as pd
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from dateutil.relativedelta import relativedelta, SU
 from sqlalchemy.dialects.postgresql import insert
 from db.models import (
@@ -72,7 +72,7 @@ def remove_microseconds(row):
         return row.replace(microsecond=0)
 
 
-def get_gen_datas_grouped(session, cli_id: int, gen_ids: list, datetime_start, datetime_end, data_type_names: Dict[int, str]) -> pd.DataFrame():
+def get_gen_datas_grouped(session, cli_id: int, gen_ids: list, datetime_start, datetime_end, data_type_names: Dict[int, str]) -> pd.DataFrame:
     """
     Get generator data for multiple data types and multiple generators.
     """
@@ -103,7 +103,7 @@ def get_gen_datas_grouped(session, cli_id: int, gen_ids: list, datetime_start, d
     return df
 
 
-def get_sta_datas_grouped(session, cli_id: int, sta_id: int, datetime_start, datetime_end, data_type_names: Dict[int, str]) -> pd.DataFrame():
+def get_sta_datas_grouped(session, cli_id: int, sta_id: int, datetime_start, datetime_end, data_type_names: Dict[int, str]) -> pd.DataFrame:
     """
     Get data for multiple data types grouped by date_time.
     """
@@ -264,3 +264,21 @@ def insert_cli_gen_alerts(session, cli_id: int, gen_ids: List[int], datetime_sta
         session.commit()
 
     return len(rows_to_insert)
+
+def get_gen_ids_by_data_pro_id(session, data_pro_id: int) -> Tuple[int, int, List[int], datetime.datetime, datetime.datetime]:
+    
+    df = pd.read_sql(session.query(GenData.gen_id, Generator.loc_id, Generator.cli_id, GenData.data_date) \
+                  .join(Generator, Generator.gen_id_auto == GenData.gen_id) \
+                  .filter(GenData.data_pro_id == data_pro_id) \
+                  .statement, session.bind)
+
+    cli_id = list(set(df['cli_id']))
+    loc_id = list(set(df['loc_id']))
+    gen_ids = list(set(df['gen_id']))
+    min_date = min(df['data_date'])
+    max_date = max(df['data_date'])
+
+    if len(cli_id) > 1 or len(loc_id) > 1:
+        raise ValueError('data_pro_id does not correspond to a single client or location')
+    return cli_id[0], loc_id[0], gen_ids, min_date, max_date
+    
