@@ -52,15 +52,15 @@ def calculate_alerts(datetime_start: Optional[datetime], datetime_end: Optional[
         date = i[1]
         gen_code= solar.gen_codes_and_names.loc[gen_id, 'gen_code']
         if alert['alert_1']:
-            description = f"Data availability on {date.strftime('%Y-%m-%d')} for generator {gen_code} was {100 - alert['missing_percentage']:.2f}%."
+            description = f"Data availability on {date.strftime('%Y-%m-%d')} for generator {gen_code} was {100 - alert['missing_percentage']:.0f}%."
             alert_data = {'type': 'alertDataAvailabilityLow', 'gen_code': gen_code, "description": description, 'value': 100 - alert['missing_percentage'], "previous_value": None, 'threshold': alert_1_threshold, "date": date.strftime('%Y-%m-%d')}
             rows_to_insert.append({"cli_id": cli_id, "gen_id": gen_id, "cli_gen_alert_added": now, "cli_gen_alert_type": ALERT_DATA_TYPE, "cli_gen_alert_data": json.dumps(alert_data), "cli_gen_alert_trigger": date})
         if alert['alert_2']:
-            description = f"Performance ratio on {date.strftime('%Y-%m-%d')} for generator {gen_code} was {alert['performance_ratio']:.2f}%, which is {alert['performance_ratio_diff_percentage']:.2f}% lower than the previous day ({alert['prev_performance_ratio']:.2f}%)"
+            description = f"Performance ratio on {date.strftime('%Y-%m-%d')} for generator {gen_code} was {alert['performance_ratio']:.0f}%, which is {alert['performance_ratio_diff_percentage']:.0f}% lower than the previous day ({alert['prev_performance_ratio']:.0f}%)"
             alert_data = {'type': 'alertPerformanceRatioLow', 'gen_code': gen_code, 'description:': description, 'value': alert['performance_ratio'], "previous_value": alert['prev_performance_ratio'], 'threshold': alert_2_threshold, "date": date.strftime('%Y-%m-%d'), "diff_percentage": alert['performance_ratio_diff_percentage']}
             rows_to_insert.append({"cli_id": cli_id, "gen_id": gen_id, "cli_gen_alert_added": now, "cli_gen_alert_type": ALERT_DATA_TYPE, "cli_gen_alert_data": json.dumps(alert_data), "cli_gen_alert_trigger": date})
         if alert['alert_3']:
-            description = f"Time based availability on {date.strftime('%Y-%m-%d')} for generator {gen_code} was {alert['time_based_availability']*100:.2f}%, which is { alert['time_based_availability_diff_percentage']:.2f}% lower than the previous day ({alert['prev_time_based_availability']*100:.2f}%)"
+            description = f"Time based availability on {date.strftime('%Y-%m-%d')} for generator {gen_code} was {alert['time_based_availability']*100:.0f}%, which is { alert['time_based_availability_diff_percentage']:.0f}% lower than the previous day ({alert['prev_time_based_availability']*100:.0f}%)"
             alert_data = {'type': 'alertTimeBasedAvailabilityLow', 'gen_code': gen_code, 'description':description,'value': alert['time_based_availability'], "previous_value": alert['prev_time_based_availability'], 'threshold': alert_3_threshold, "date": date.strftime('%Y-%m-%d'), "diff_percentage": alert['time_based_availability_diff_percentage']}
             rows_to_insert.append({"cli_id": cli_id, "gen_id": gen_id, "cli_gen_alert_added": now, "cli_gen_alert_type": ALERT_DATA_TYPE, "cli_gen_alert_data": json.dumps(alert_data), "cli_gen_alert_trigger": date})
 
