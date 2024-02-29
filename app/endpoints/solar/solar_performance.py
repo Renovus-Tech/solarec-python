@@ -107,8 +107,8 @@ def performance(param_json):
             gen_data = GenData(id=gen_id,
                                name=gen_name,
                                code=gen_code,
-                               productionMwh=round(gen_row['power'], 1),
-                               acProductionMwh=round(gen_row['ac_production'], 1),
+                               productionMwh=round(gen_row['power'], 3),
+                               acProductionMwh=round(gen_row['ac_production'], 3),
                                irradiationKwhM2=round(gen_row['irradiation'], 1),
                                performanceRatio=round(gen_row['performance_ratio'], 1),
                                timeBasedAvailability=round(gen_row['time_based_availability'], 1))
@@ -116,8 +116,8 @@ def performance(param_json):
 
         data = Data(**{"from": row['from'].strftime("%Y/%m/%d %H:%M:%S"),
                        "to": row['to'].strftime("%Y/%m/%d %H:%M:%S"),
-                       "totalProductionMwh": round(row['power'], 1),
-                       "totalACProductionMwh": round(row['ac_production'], 1),
+                       "totalProductionMwh": round(row['power'], 3),
+                       "totalACProductionMwh": round(row['ac_production'], 3),
                        "totalIrradiationKwhM2": round(row['irradiation'], 1),
                        "performanceRatio": round(row['performance_ratio'], 1),
                        "timeBasedAvailability": round(row['time_based_availability'], 1),
