@@ -44,7 +44,9 @@ class Solar():
             [self.gen_data.data_date, self.gen_data.gen_id], inplace=True)
         self.gen_data.drop(['data_date', 'gen_id'], axis=1, inplace=True)
 
-        self.gen_data['power'] = self.gen_data['power'].fillna(self.gen_data['ac_production'])
+        self.gen_data['power'].fillna(self.gen_data['ac_production'], inplace=True)
+        self.gen_data['ac_production'].fillna(self.gen_data['power'], inplace=True)
+        
 
     def _fill_missing_sta_data(self):
         all_time = pd.DataFrame({'data_date': np.arange(
