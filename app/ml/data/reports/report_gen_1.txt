@@ -1,0 +1,74 @@
+## Memoria Técnica
+
+**Planta solar fotovoltaica de 20 kWp conectada a red en San Carlos de Bariloche**
+
+**Fecha instalación:** 2024-03-15
+**Tamaño planta:** 20 kWp
+**Ubicación:** San Carlos de Bariloche, Argentina
+**Fecha puesta en marcha:** 2024-04-01
+
+**1. RESUMEN**
+
+La presente memoria describe una planta solar fotovoltaica de 20 kWp de potencia nominal, ubicada en San Carlos de Bariloche, Argentina. La planta se conecta a la red eléctrica de baja tensión y tiene como objetivo generar energía eléctrica para autoconsumo y venta del excedente a la compañía distribuidora.
+
+**2. ANTECEDENTES**
+
+El crecimiento de la demanda energética y la necesidad de reducir las emisiones de gases de efecto invernadero han impulsado el desarrollo de las energías renovables. La energía solar fotovoltaica se presenta como una alternativa viable y sostenible, con un alto potencial en Argentina.
+
+**3. OBJETO**
+
+El objeto de la presente memoria es definir las principales características técnicas de la planta solar fotovoltaica, incluyendo:
+
+* Descripción general del sistema
+* Componentes principales (módulos, inversores, estructura, etc.)
+* Balance energético
+* Planos de ubicación y distribución
+
+**4. MEMORIA DESCRIPTIVA**
+
+**4.1 Descripción general del sistema**
+
+La planta solar fotovoltaica se compone de los siguientes elementos:
+
+* **Módulos fotovoltaicos:** 80 módulos policristalinos de 250 Wp cada uno, con una potencia total de 20 kWp.
+* **Inversores:** 1 inversor trifásico de 20 kW con conexión a red.
+* **Estructura de montaje:** Estructura de aluminio sobre cubierta para soportar los módulos fotovoltaicos.
+* **Cableado y protecciones:** Cableado eléctrico y protecciones para garantizar la seguridad y el correcto funcionamiento del sistema.
+
+**4.2 Componentes principales**
+
+* **Módulos fotovoltaicos:** Se utilizarán módulos policristalinos de 250 Wp de potencia nominal, fabricados por una empresa reconocida y con una garantía de rendimiento de 25 años.
+* **Inversores:** Se instalará un inversor trifásico de 20 kW de potencia nominal, con un alto rendimiento de conversión y capacidad de conexión a red.
+* **Estructura de montaje:** La estructura de montaje estará fabricada en aluminio y estará diseñada para soportar las cargas de viento y nieve de la zona.
+
+**4.3 Balance energético**
+
+La producción anual estimada de la planta solar fotovoltaica es de 27.000 kWh. El consumo anual del edificio se estima en 20.000 kWh, por lo que el excedente de energía se venderá a la compañía distribuidora.
+
+**5. PLANOS**
+
+Se incluyen los siguientes planos:
+
+* Plano 1: Situación de la planta en la cubierta del edificio.
+* Plano 2: Distribución de los módulos fotovoltaicos en la cubierta.
+* Plano 3: Esquema unifilar del sistema eléctrico.
+
+**6. CONCLUSIONES**
+
+La planta solar fotovoltaica de 20 kWp en San Carlos de Bariloche es una alternativa viable y sostenible para generar energía eléctrica para autoconsumo y venta del excedente a la compañía distribuidora. La planta contribuirá a reducir las emisiones de gases de efecto invernadero y diversificar la matriz energética de la región.
+
+**7. ANEXOS**
+
+Se incluyen los siguientes anexos:
+
+* Ficha técnica de los módulos fotovoltaicos.
+* Ficha técnica del inversor.
+* Esquema de conexiones eléctricas.
+
+**8. CONTACTO**
+
+Para más información, contacte con:
+
+* Nombre: [Nombre del responsable]
+* Email: [Correo electrónico del responsable]
+* Teléfono: [Número de teléfono del responsable]

@@ -1,0 +1,20 @@
+
+Informe de Planta Solar Fotovoltaica - Resumen Ejecutivo
+
+Este informe proporciona una visión detallada de la planta solar fotovoltaica localizada en Almería, Andalucía, la cual ha sido construida con el propósito de generar y suministrar energía eléctrica a la red de baja tensión. La instalación ha sido completada exitosamente y se encuentra operativa desde [Fecha instalación].
+
+Ubicación y Dimensiones de la Planta:
+La planta solar fotovoltaica se sitúa en el Parque Industrial Los Llanos, Almería, Andalucía. Con una capacidad instalada de 25 kW y una capacidad total de 28.500 Wp, el complejo consta de 150 módulos fotovoltaicos de última tecnología.
+
+Fecha de Puesta en Funcionamiento:
+La planta fue conectada a la red y puesta en marcha en el año 2013.
+
+Características Técnicas Destacadas:
+
+Módulos Fotovoltaicos: La instalación comprende 150 módulos monocristalinos de alto rendimiento, diseñados para maximizar la captación de energía solar.
+Inversores: Se ha instalado un inversor de última generación, el modelo PowerMax 25, con una capacidad nominal de 25 kW, garantizando así la eficiencia y fiabilidad del sistema.
+Estructura de Soporte: La estructura de soporte ha sido fabricada utilizando acero galvanizado de alta resistencia, asegurando la estabilidad y durabilidad de la instalación en condiciones climáticas adversas.
+Protecciones y Cableado: Todos los componentes de la planta cumplen con las normativas nacionales e internacionales, garantizando la seguridad y confiabilidad del sistema de generación fotovoltaica.
+Estimación de Producción Energética: Se estima que la planta generará aproximadamente 45.000 kWh de energía eléctrica al año, con una producción media de 1.578 kWh/kWp, contribuyendo así a la reducción de emisiones de CO2 en 35 toneladas anuales.
+Memoria Técnica:
+La construcción y operación de la planta solar fotovoltaica se han llevado a cabo en estricto cumplimiento de las regulaciones y normativas vigentes, así como siguiendo las mejores prácticas de la industria energética. La instalación representa un paso significativo hacia la generación de energía renovable y sostenible en la región de Andalucía.
