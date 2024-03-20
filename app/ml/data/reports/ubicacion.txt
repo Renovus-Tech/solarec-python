@@ -1,0 +1,99 @@
+La planta se encuentra en la ciudad de Santo Domingo, República Dominicana.
+La planta está ubicada en la provincia de Santiago, República Dominicana.
+La planta se encuentra en la región del Cibao, República Dominicana.
+La planta se encuentra en la ciudad de Puerto Príncipe, Haití.
+La planta está ubicada en la región del Norte, Haití.
+La planta se encuentra en la región del Sur, Haití.
+La planta se encuentra en la ciudad de Kingston, Jamaica.
+La planta está ubicada en la parroquia de Saint Andrew, Jamaica.
+La planta se encuentra en la parroquia de Saint Catherine, Jamaica.
+La planta se encuentra en la ciudad de Bridgetown, Barbados.
+La planta está ubicada en la parroquia de Saint Michael, Barbados.
+La planta se encuentra en la parroquia de Christ Church, Barbados.
+La planta se encuentra en la ciudad de Castries, Santa Lucía.
+La planta está ubicada en el distrito de Castries, Santa Lucía.
+La planta se encuentra en el distrito de Gros Islet, Santa Lucía.
+La planta se encuentra en la ciudad de Roseau, Dominica.
+La planta está ubicada en la parroquia de Saint George, Dominica.
+La planta se encuentra en la parroquia de Saint Peter, Dominica.
+La planta se encuentra en la ciudad de Saint John's, Antigua y Barbuda.
+La planta está ubicada en la parroquia de Saint John, Antigua y Barbuda.
+La planta se encuentra en la parroquia de Saint Mary, Antigua y Barbuda.
+La planta se encuentra en la ciudad de Basseterre, San Cristóbal y Nieves.
+La planta está ubicada en la parroquia de Saint George Basseterre, San Cristóbal y Nieves.
+La planta se encuentra en la parroquia de Saint Peter Basseterre, San Cristóbal y Nieves.
+La planta se encuentra en la ciudad de Plymouth, Montserrat.
+La planta está ubicada en la parroquia de Saint George, Montserrat.
+La planta se encuentra en la parroquia de Saint Peter, Montserrat.
+La planta se encuentra en la ciudad de Road Town, Islas Vírgenes Británicas.
+La planta está ubicada en la isla de Tortola, Islas Vírgenes Británicas.
+La planta se encuentra en la isla de Virgen Gorda, Islas Vírgenes Británicas.
+La planta se encuentra en la ciudad de Charlotte Amalie, Islas Vírgenes de los Estados Unidos.
+La planta está ubicada en la isla de Saint Thomas, Islas Vírgenes de los Estados Unidos.
+La planta se encuentra en la isla de Saint Croix, Islas Vírgenes de los Estados Unidos.
+La planta se encuentra en la ciudad de Philipsburg, Sint Maarten.
+La planta está ubicada en la parte holandesa de la isla de San Martín.
+La planta se encuentra en la parte francesa de la isla de San Martín.
+La planta se encuentra en la ciudad de The Valley, Anguila.
+La planta está ubicada en la isla de Anguila.
+La planta se encuentra en la ciudad de Hamilton, Bermudas.
+La planta está ubicada en la isla de Gran Bermuda.
+La planta se encuentra en la isla de Saint George, Bermudas.
+La planta se encuentra en la ciudad de Nassau, Bahamas.
+La planta está ubicada en la isla de Nueva Providencia, Bahamas.
+La planta se encuentra en la isla de Gran Bahama, Bahamas.
+La planta se encuentra en la ciudad de George Town, Islas Caimán.
+La planta está ubicada en la isla de Gran Caimán.
+La planta se encuentra en la isla de Cayman Brac.
+La planta se encuentra en la isla de Little Cayman.
+La planta se encuentra en la ciudad de Montevideo, Uruguay.
+La planta está ubicada en el departamento de Maldonado, Uruguay.
+La nueva planta estará emplazada en la zona industrial de Montevideo, Uruguay.
+Las coordenadas de la planta son -34.898581, -56.164444.
+La planta se encuentra en la región central de Uruguay.
+La planta está ubicada en el distrito de Pocitos, Montevideo, Uruguay.
+La planta se construirá en la ciudad de Buenos Aires, Argentina.
+La planta se instalará en la región del Amazonas, Brasil.
+La planta se encuentra en el centro de México.
+La planta tiene su sede en Lima, Perú.
+El emplazamiento de la planta es en la ciudad de Quito, Ecuador.
+La planta se emplaza en la región de los Andes, Bolivia.
+El emplazamiento de la planta es en el sur de Paraguay.
+La situación de la planta es en la ciudad de San José, Costa Rica.
+La planta está situada en la región del Caribe, República Dominicana.
+La planta se encuentra en el este de Venezuela.
+La planta se asienta en la ciudad de Guatemala, Guatemala.
+La planta se encuentra asentada en la región del Pacífico, El Salvador.
+La planta está asentada en el oeste de Honduras.
+La sede de la planta es en la ciudad de Managua, Nicaragua.
+La planta tiene su sede en la región del Istmo Centroamericano, Panamá.
+La planta se encuentra en la ciudad de Belice, Belice.
+La planta se localiza en la calle San Martín 123, Santiago de Chile.
+La planta está ubicada en la avenida Amazonas 456, Quito, Ecuador.
+La planta se encuentra ubicada en la carretera Transístmica 789, Ciudad de Panamá, Panamá.
+Las coordenadas de la planta son -33.448371, -70.669265. (Santiago de Chile)
+Las coordenadas de la planta son -0.229859, -78.524912. (Quito, Ecuador)
+Las coordenadas de la planta son 8.993612, -79.518353. (Ciudad de Panamá, Panamá)
+La planta se encuentra en la región del Biobío, Chile.
+La planta está ubicada en la región de la Sierra, Ecuador.
+La planta se encuentra en la región de Bocas del Toro, Panamá.
+La planta se encuentra en la provincia de Buenos Aires, Argentina.
+La planta está ubicada en la provincia de Pichincha, Ecuador.
+La planta se encuentra en la provincia de Chiriquí, Panamá.
+La planta se encuentra en el departamento de Montevideo, Uruguay.
+La planta está ubicada en el departamento de Santa Cruz, Bolivia.
+La planta se encuentra en el departamento de Guatemala, Guatemala.
+La planta se encuentra en el distrito de Miraflores, Lima, Perú.
+La planta está ubicada en el distrito de El Poblado, Medellín, Colombia.
+La planta se encuentra en el distrito de San Francisco, Ciudad de Panamá, Panamá.
+La planta se ubica en la ciudad de México, México.
+El proyecto se desarrollará en la región de la Patagonia, Argentina.
+La nueva planta estará emplazada en la zona industrial de Bogotá, Colombia.
+Las coordenadas de la planta son -23.547540, -46.635881.
+La planta se encuentra en la región central de Costa Rica.
+La planta está ubicada en el distrito de Centro Habana, La Habana, Cuba.
+La planta se construirá en la ciudad de Caracas, Venezuela.
+La planta se instalará en la región del Orinoco, Venezuela.
+La planta se encuentra en proceso de construcción en la ciudad de Santo Domingo, República Dominicana.
+La planta está operativa en la región del Caribe, Cuba.
+La planta se encuentra en la ciudad de San Juan, Puerto Rico.

@@ -2,7 +2,7 @@
 
 **Resumen Ejecutivo:**
 
-Este informe detalla el diseño e implementación de una planta de energía fotovoltaica (FV) de 20 kWp ubicada en San Carlos de Bariloche, Argentina. La planta utiliza 80 módulos solares de 250 Wp, un inversor de 20 kW y una estructura de soporte robusta para generar energía limpia y renovable para consumo en el sitio e integración a la red. La producción anual de energía estimada es de 27.000 kWh, con una reducción proyectada de 20.000 kWh en el consumo de energía convencional.
+Este informe detalla el diseño e implementación de una planta de energía fotovoltaica (FV) de 20 kWp ubicada en San Carlos de Bariloche, Argentina. La planta utiliza 80 módulos solares de 250 W, un inversor de 20 kW y una estructura de soporte robusta para generar energía limpia y renovable para consumo en el sitio e integración a la red. La producción anual de energía estimada es de 27.000 kWh, con una reducción proyectada de 20.000 kWh en el consumo de energía convencional.
 
 **1. Introducción:**
 
@@ -10,7 +10,7 @@ La creciente demanda de energía junto con la necesidad de sostenibilidad ambien
 
 **2. Descripción del Sistema:**
 
-**2.1. Módulos:** 80 módulos policristalinos, cada uno con una potencia nominal de 250 Wp, están dispuestos en una distribución optimizada para maximizar la captación de energía solar. Los detalles del fabricante, la garantía y la eficiencia se proporcionan en el Apéndice A.
+**2.1. Módulos:** 80 módulos policristalinos, cada uno con una potencia nominal de 250 W, están dispuestos en una distribución optimizada para maximizar la captación de energía solar. Los detalles del fabricante, la garantía y la eficiencia se proporcionan en el Apéndice A.
 
 **2.2. Inversor:** Un solo inversor trifásico de 20 kW convierte sin problemas la corriente continua (CC) producida por los módulos en corriente alterna (CA) compatible con la red. Las especificaciones del inversor y los datos de rendimiento se incluyen en el Apéndice B.
 
