@@ -1,5 +1,7 @@
 venv/*
 .venv/*
+.venv.resp/*
 **/__pycache__/
 app/database.ini
 .DS_Store
+app/.coverage

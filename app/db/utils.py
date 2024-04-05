@@ -239,7 +239,6 @@ def get_loc_output_capacity(session, locId: int):
         .first()[0]
     )
 
-
 def get_client_settings(session, cli_id: int):
     df = pd.read_sql(
         session.query(CliSetting.cli_set_name, CliSetting.cli_set_value)
