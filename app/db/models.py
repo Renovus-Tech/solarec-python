@@ -34,8 +34,27 @@ class Location(Base):
     loc_data_date_max = Column(DateTime(timezone=False))
     loc_data_date_min = Column(DateTime(timezone=False))
     loc_demo_date = Column(DateTime(timezone=False))
+    ctr_id = Column(Integer, ForeignKey("country.ctr_id_auto"))
 
+class Country(Base):
+    __tablename__ = "country"
+    ctr_id_auto = Column(Integer, primary_key=True)
+    ctr_name = Column(String)
+    ctr_name_show = Column(String)
+    ctr_code_2 = Column(String)
+    ctr_code_3 = Column(String)
+    ctr_data_date_max = Column(DateTime(timezone=False))
+    ctr_data_date_min = Column(DateTime(timezone=False))
 
+class CtrData(Base):
+    __tablename__ = "ctr_data"
+    ctr_id = Column(Integer, ForeignKey("country.ctr_id_auto"), primary_key=True)
+    data_date = Column(DateTime, primary_key=True)
+    data_type_id = Column(Integer, primary_key=True)
+    data_pro_id = Column(Integer, ForeignKey("data_processing.data_pro_id_auto"))
+    data_value = Column(Float)
+    data_date_added = Column(DateTime(timezone=True))
+    
 class Station(Base):
     __tablename__ = "station"
 
