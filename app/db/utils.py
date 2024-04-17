@@ -12,6 +12,7 @@ from db.models import (
     Generator,
     GenData,
     StaData,
+    CtrData
 )
 
 
@@ -281,3 +282,18 @@ def get_gen_ids_by_data_pro_id(session, data_pro_id: int) -> Tuple[int, int, Lis
         raise ValueError('data_pro_id does not correspond to a single client or location')
     return cli_id[0], loc_id[0], gen_ids, min_date, max_date
     
+def get_co2_emissions_per_kwh(session, loc_id: int, datetime_start: datetime.datetime, datetime_end: datetime.datetime) -> pd.DataFrame:
+    df = pd.read_sql(
+        session.query(CtrData.data_date, CtrData.data_value)
+        .join(Location, Location.ctr_id == CtrData.ctr_id)
+        .filter(Location.loc_id_auto == loc_id)
+        .filter(CtrData.data_type_id == 901)
+        .filter(CtrData.data_date < datetime_end)
+        .filter(CtrData.data_date >= datetime_start)
+        .statement, session.bind)
+    df["data_date"] = df["data_date"].apply(
+        lambda row: remove_microseconds(row))
+    
+    df.rename(columns={"data_value": "co2_per_kwh"}, inplace=True)
+    return df.set_index('data_date')
+
