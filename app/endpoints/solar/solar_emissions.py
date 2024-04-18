@@ -26,6 +26,7 @@ class Data(BaseModel):
     from_: str = Field(alias='from')
     to: str
     co2Avoided: float
+    co2PerKwh: float
 
 class Response(BaseModel):
     chart: Chart
@@ -74,6 +75,7 @@ def emissions(param_json):
     for _, row in data.iterrows():
         datas.append(Data(**{"from": row['from'].strftime("%Y/%m/%d %H:%M:%S"),
                              "to": row['to'].strftime("%Y/%m/%d %H:%M:%S"),
-                             "co2Avoided": round(row['co2_avoided'], 5)}))
+                             "co2Avoided": round(row['co2_avoided'], 5),
+                             "co2PerKwh": round(row['co2_per_kwh'], 5),}))
 
     return Response(chart=chart, data=datas)

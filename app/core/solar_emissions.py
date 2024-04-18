@@ -35,4 +35,5 @@ def calculate_co2_avoided(cli_id: int, loc_id:int, datetime_start: datetime, dat
     df['cert_sold'] = df['cert_generated'] * cert_sold_pct
     df['price'] = df['cert_generated'] * cert_price
     df['income'] = df['cert_sold'] * cert_price
-    return df[['co2_avoided', 'cert_sold', 'cert_generated', 'price', 'income', 'from', 'to']]
+    
+    return df[['co2_avoided', 'cert_sold', 'cert_generated', 'co2_per_kwh', 'price', 'income', 'from', 'to']]
