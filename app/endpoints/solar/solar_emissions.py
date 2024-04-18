@@ -61,7 +61,7 @@ def parse_request(param_json) -> Request:
                    group_by=group_by)
 
 
-@router.get("/", tags=["solar", "performance"], response_model=Response)
+@router.get("/", tags=["solar", "emissions"], response_model=Response)
 def emissions(param_json):
     request = parse_request(param_json)
     data = calculate_co2_avoided(request.client, request.location, request.start_date, request.end_date, request.freq)

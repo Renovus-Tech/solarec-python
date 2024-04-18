@@ -8,9 +8,9 @@ from dateutil.parser import parse
 from pydantic import BaseModel, Field
 
 router = APIRouter(
-    prefix="/solar/certificates",
-    tags=["solar", "certificates"],
-    responses={400: {"description": "Could not get certificates"}},
+    prefix="/solar/sales",
+    tags=["solar", "sales"],
+    responses={400: {"description": "Could not get sales"}},
 )
 
 
@@ -27,7 +27,9 @@ class Data(BaseModel):
     to: str
     co2Avoided: float
     certGenerated: float
+    certPrice: float
     certSold: float
+    certIncome: float
 
 class Response(BaseModel):
     chart: Chart
@@ -63,8 +65,8 @@ def parse_request(param_json) -> Request:
                    group_by=group_by)
 
 
-@router.get("/", tags=["solar", "certificates"], response_model=Response)
-def certificates(param_json):
+@router.get("/", tags=["solar", "sales"], response_model=Response)
+def sales(param_json):
     request = parse_request(param_json)
     data = calculate_co2_avoided(request.client, request.location, request.start_date, request.end_date, request.freq)
     chart = Chart(**{"from": request.start_date.strftime("%Y/%m/%d %H:%M:%S"),
@@ -78,6 +80,8 @@ def certificates(param_json):
                              "to": row['to'].strftime("%Y/%m/%d %H:%M:%S"),
                              "co2Avoided": round(row['co2_avoided'], 5),
                              "certGenerated": round(row['cert_generated'], 3),
-                             "certSold": round(row['cert_sold'], 3)}))
+                             "certSold": round(row['cert_sold'], 3),
+                             "certPrice": round(row['price'], 3),
+                             "certIncome": round(row['income'], 3)}))
 
     return Response(chart=chart, data=datas)
