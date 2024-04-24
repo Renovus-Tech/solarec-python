@@ -294,6 +294,6 @@ def get_co2_emissions_per_kwh(session, loc_id: int, datetime_start: datetime.dat
     df["data_date"] = df["data_date"].apply(
         lambda row: remove_microseconds(row))
     
-    df.rename(columns={"data_value": "co2_per_kwh"}, inplace=True)
+    df.rename(columns={"data_value": "co2_per_mwh"}, inplace=True)
     return df.set_index('data_date')
 

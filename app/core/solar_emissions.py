@@ -30,10 +30,10 @@ def calculate_co2_avoided(cli_id: int, loc_id:int, datetime_start: datetime, dat
 
     df = solar.data_aggregated_by_loc_and_period.merge(co2, on='data_date', how='left')
     df['cert_generated'] = df['power']
-    df['co2_avoided'] = df['power'] * df['co2_per_kwh']
+    df['co2_avoided'] = df['power'] * df['co2_per_mwh']
     df['cert_generated'] = df['power']
     df['cert_sold'] = df['cert_generated'] * cert_sold_pct
     df['price'] = df['cert_generated'] * cert_price
     df['income'] = df['cert_sold'] * cert_price
     
-    return df[['co2_avoided', 'cert_sold', 'cert_generated', 'co2_per_kwh', 'price', 'income', 'from', 'to']]
+    return df[['co2_avoided', 'cert_sold', 'cert_generated', 'co2_per_mwh', 'price', 'income', 'from', 'to']]
