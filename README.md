@@ -1,4 +1,6 @@
 [![Python application](https://github.com/Renovus-Tech/solarec-python/actions/workflows/python-app.yml/badge.svg?branch=main)](https://github.com/Renovus-Tech/solarec-python/actions/workflows/python-app.yml)
+[![Python application](https://github.com/Renovus-Tech/solarec-python/blob/coverage-badge/coverage.svg)](https://github.com/Renovus-Tech/solarec-python/actions/workflows/python-app.yml)
+
 
 # SolaREC
  
