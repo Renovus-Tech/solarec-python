@@ -1,3 +1,4 @@
 [run]
 omit = test_*, __init__.py
 source=.
+directory=..
