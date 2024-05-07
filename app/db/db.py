@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from configparser import ConfigParser
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.ext.declarative import declarative_base
-
+import os
 
 def get_DATABASE_URI(filename="database.ini", section="postgresql"):
 
@@ -34,15 +34,16 @@ def get_DATABASE_URI(filename="database.ini", section="postgresql"):
     return DATABASE_URI
 
 
-DATABASE_URI = get_DATABASE_URI(filename="database.ini", section="postgresql")
-engine = create_engine(DATABASE_URI, pool_pre_ping=True, pool_size=10, max_overflow=30)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+if os.path.isfile("database.ini"):
+    DATABASE_URI = get_DATABASE_URI(filename="database.ini", section="postgresql")
+    engine = create_engine(DATABASE_URI, pool_pre_ping=True, pool_size=10, max_overflow=30)
 
-Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
-session = Session()
+    session = Session()
 
-# %%
+

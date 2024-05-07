@@ -1,5 +1,3 @@
-import os
-import openai
 from pydantic import BaseModel
 from app.nlp.llm_client import LLMClient
 
