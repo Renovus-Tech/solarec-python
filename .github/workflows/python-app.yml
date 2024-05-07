@@ -30,6 +30,7 @@ jobs:
         python -m pytest
     - name: Run coverage
       run: |
+        cd app
         coverage run --source=. -m pytest
         coverage report -m
     - name: Coverage Badge
