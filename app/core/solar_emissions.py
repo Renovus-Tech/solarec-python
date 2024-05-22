@@ -23,9 +23,17 @@ def calculate_co2_avoided(cli_id: int, loc_id: int, datetime_start: datetime, da
     co2 = get_co2_emissions_per_kwh(session, solar.loc_id, datetime_start, datetime_end)
     client_settings = get_client_settings(session, cli_id)
 
-    cert_sold_pct = client_settings.loc['certSoldPorcentage']['cli_set_value'] or 0
+    if 'certSoldPorcentage' in client_settings.index:
+        cert_sold_pct = client_settings.loc['certSoldPorcentage']['cli_set_value'] or 0
+    else:
+        cert_sold_pct = 0
+
+    if 'certPrice' in client_settings.index:
+        cert_price = client_settings.loc['certPrice']['cli_set_value'] or 0
+    else:
+        cert_price = 0
+
     cert_sold_pct = int(cert_sold_pct) / 100
-    cert_price = client_settings.loc['certPrice']['cli_set_value'] or 0
     cert_price = int(cert_price)
 
     co2 = _fill_missing_data(co2, datetime_start, datetime_end)
