@@ -41,3 +41,6 @@ To run the API, follow these steps:
 
 ### API Endpoints
 After starting the API, visit `<url>/docs` to access the API documentation and explore its endpoints.
+
+### LLM Client Integration for Automated Onboarding Extraction
+For guidance on integrating various Language Model (LLM) clients and configuring automated onboarding data extraction, refer to the LLM Client Integration [Guide](https://github.com/Renovus-Tech/solarec-python/blob/main/app/nlp/readme.md). This guide covers the setup and usage of different LLM APIs to streamline the extraction of onboarding information from unstructured text.
