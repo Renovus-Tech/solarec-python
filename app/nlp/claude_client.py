@@ -11,9 +11,9 @@ class ClaudeAIClient(LLMClient):
     def __init__(self):
         initial_prompt = os.environ.get("CLAUDE_INITIAL_PROMPT")
         session_key = os.environ.get("CLAUDE_SESSION_KEY")
-        organizations = client.get_organizations()
 
         client = claude_client.ClaudeClient(session_key)
+        organizations = client.get_organizations()
         self.claude = claude_wrapper.ClaudeWrapper(client, organization_uuid=organizations[0]['uuid'])
 
         self.conversation_data = self.claude.start_new_conversation("Claude Conversation", initial_prompt)
