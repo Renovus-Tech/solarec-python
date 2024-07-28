@@ -64,7 +64,7 @@ Set up the following environment variables in your development environment:
 - `GEMINI_MODEL_NAME`: The model you want to use (e.g., `"gemini3.1-8b"`)
 - `GEMINI_INITIAL_PROMPT`: The initial prompt for the model (e.g., `"Extract location, capacity, installation date from the following document. The output should be in JSON format, including only the fields: location, capacity, installation_date."`)
 
-### Llama API Guide
+### LLaMA API Guide
 
 #### Obtaining an API Token
 
@@ -84,6 +84,7 @@ Set up the following environment variables in your development environment:
 
 Set up the following environment variables in your development environment:
 
-- `GEMINI_API_KEY`: Your API Token (e.g., `"KF5JQJ2JX0Z0YXKJZQ2J0"`)
-- `GEMINI_MODEL_NAME`: The model you want to use (e.g., `"llama3.1-8b"`)
-- `GEMINI_INITIAL_PROMPT`: The initial prompt for the model (e.g., `"Extract location, capacity, installation date from the following document. The output should be in JSON format, including only the fields: location, capacity, installation_date."`)
+- `LLAMA_API_KEY`: Your API Token (e.g., `"KF5JQJ2JX0Z0YXKJZQ2J0"`)
+- `LLAMA_MODEL_NAME`: The model you want to use (e.g., `"llama3.1-8b"`)
+- `LLAMA_BASE_URL`: The base URL of LLaMA's API (e.g. https://api.llama-api.com)
+- `LLAMA_INITIAL_PROMPT`: The initial prompt for the model (e.g., `"Extract location, capacity, installation date from the following document. The output should be in JSON format, including only the fields: location, capacity, installation_date."`)
