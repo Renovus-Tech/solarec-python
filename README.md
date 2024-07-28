@@ -1,7 +1,7 @@
 [![Build](https://github.com/Renovus-Tech/solarec-python/actions/workflows/python-build.yml/badge.svg?branch=main)](https://github.com/Renovus-Tech/solarec-python/actions/workflows/python-build.yml)
 [![Tests](https://github.com/Renovus-Tech/solarec-python/actions/workflows/python-tests.yml/badge.svg?branch=main)](https://github.com/Renovus-Tech/solarec-python/actions/workflows/python-tests.yml)
 [![Coverage](https://github.com/Renovus-Tech/solarec-python/blob/coverage-badge/coverage.svg)](https://github.com/Renovus-Tech/solarec-python/actions/workflows/python-app.yml)
-
+[![CLA assistant](https://cla-assistant.io/readme/badge/Renovus-Tech/solarec-python)](https://cla-assistant.io/Renovus-Tech/solarec-python)
 
 # SolaREC
  
