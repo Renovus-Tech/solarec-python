@@ -1,13 +1,15 @@
+import os
+
 from app.nlp.gemini_client import GeminiAIClient
 from app.nlp.llama_client import LlamaAIClient
-from app.nlp.open_ai_client import OpenAIClient
+from app.nlp.openai_client import OpenAIClient
 
 
 class LLMClientFactory():
     ''' Factory class for creating LLMClient instances'''
 
     @staticmethod
-    def create_llm_client(llm_type: str, initial_prompt: str):
+    def create_llm_client(initial_prompt: str):
         ''' Create an LLMClient instance based on the type'''
 
         llm_client_name = os.environ.get("LLM_CLIENT_NAME")

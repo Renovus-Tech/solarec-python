@@ -1,6 +1,8 @@
+from unittest.mock import patch
+
+from app.nlp.llm_client_factory import LLMClientFactory
 from app.nlp.onboarding_helper import NLPOnboardingHelper
 
-from unittest.mock import patch
 
 def test_get_onboarding_data():
 
@@ -18,3 +20,12 @@ def test_get_onboarding_data():
         assert onboarding_data.capacity == 1000
         assert onboarding_data.installation_date == '2022-01-01'
 
+
+def test_get_onboarding_data_empty():
+    with patch('app.nlp.onboarding_helper.LLMClient') as mock_llm_client:
+        mock_llm_client.generate_json.return_value = {}
+        onboarding_helper = NLPOnboardingHelper(mock_llm_client)
+
+        onboarding_data = onboarding_helper.get_onboarding_data('A random text with no information')
+
+        assert onboarding_data is None

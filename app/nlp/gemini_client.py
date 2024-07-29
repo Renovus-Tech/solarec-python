@@ -16,7 +16,6 @@ class GeminiAIClient(LLMClient):
         genai.configure(api_key=gemini_api_key)
         self.model = genai.GenerativeModel(gemini_model_name,   system_instruction=initial_prompt)
 
-
-def generate_text(self, prompt):
-    ''' Generate text based on the prompt'''
-    return self.model.generate_content(prompt)
+    def generate_text(self, prompt):
+        ''' Generate text based on the prompt'''
+        return self.model.generate_content(prompt)

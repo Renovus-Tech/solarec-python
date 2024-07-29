@@ -1,10 +1,13 @@
 import os
+
 import openai
+
 from app.nlp.llm_client import LLMClient
 
 
 class OpenAIClient(LLMClient):
     ''' OpenAI Language Model '''
+
     def __init__(self):
         initial_prompt = os.environ.get("OPENAI_INITIAL_PROMPT")
         api_key = os.environ.get("OPENAI_API_KEY")
