@@ -1,6 +1,5 @@
 import os
 
-import google.generativeai as genai
 from openai import OpenAI
 
 from app.nlp.llm_client import LLMClient
