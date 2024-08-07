@@ -1,19 +1,12 @@
-import time
 import datetime
-import pandas as pd
+import time
 from typing import Dict, List, Tuple
-from dateutil.relativedelta import relativedelta, SU
-from sqlalchemy.dialects.postgresql import insert
-from db.models import (
-    CliGenAlert,
-    CliSetting,
-    Location,
-    Station,
-    Generator,
-    GenData,
-    StaData,
-    CtrData
-)
+
+import pandas as pd
+import sqlalchemy.dialects.postgresql as pq
+from dateutil.relativedelta import SU, relativedelta
+from db.models import (CliGenAlert, CliSetting, CtrData, GenData, Generator,
+                       Location, StaData, Station)
 
 
 def get_period_end(datetime_start, freq, end_date):
@@ -123,17 +116,14 @@ def get_sta_datas_grouped(session, cli_id: int, sta_id: int, datetime_start, dat
     df["data_date"] = df["data_date"].apply(
         lambda row: remove_microseconds(row))
     if not df.empty:
-        df['data_date'] = df['data_date'] - \
-            pd.to_timedelta(df['data_date'].dt.second, unit='s')
+        df['data_date'] = df['data_date'] - pd.to_timedelta(df['data_date'].dt.second, unit='s')
     result = pd.DataFrame()
     result['data_date'] = df['data_date']
     result['sta_id'] = df['sta_id']
     for data_type_id, data_name in data_type_names.items():
-        result[data_name] = df[df['data_type_id']
-                               == data_type_id]['data_value']
+        result[data_name] = df[df['data_type_id'] == data_type_id]['data_value']
     t1 = time.time()
-    print(
-        f"Function get_sta_datas for1 stations and {len(data_type_names.keys())} data types took {t1 - t0:.2f} seconds.")
+    print(f"Function get_sta_datas for1 stations and {len(data_type_names.keys())} data types took {t1 - t0:.2f} seconds.")
     result = result.groupby(['data_date', 'sta_id']).sum()
 
     for column in [x for x in data_type_names.values() if x not in result.columns]:
@@ -240,17 +230,18 @@ def get_loc_output_capacity(session, locId: int):
         .first()[0]
     )
 
+
 def get_client_settings(session, cli_id: int):
     df = pd.read_sql(
         session.query(CliSetting.cli_set_name, CliSetting.cli_set_value)
         .filter(CliSetting.cli_id == cli_id)
-        .statement, session.bind     
+        .statement, session.bind
     )
     return df.set_index('cli_set_name', drop=True)
 
 
 def insert_cli_gen_alerts(session, cli_id: int, gen_ids: List[int], datetime_start: datetime.datetime, datetime_end: datetime.datetime, rows_to_insert: List[Dict]) -> int:
-    
+
     session.query(CliGenAlert).filter(
         CliGenAlert.cli_id == cli_id,
         CliGenAlert.gen_id.in_(gen_ids),
@@ -259,18 +250,19 @@ def insert_cli_gen_alerts(session, cli_id: int, gen_ids: List[int], datetime_sta
     ).delete()
 
     if len(rows_to_insert) > 0:
-        statement = insert(CliGenAlert).values(rows_to_insert)
+        statement = pq.insert(CliGenAlert).values(rows_to_insert)
         session.execute(statement)
         session.commit()
 
     return len(rows_to_insert)
 
+
 def get_gen_ids_by_data_pro_id(session, data_pro_id: int) -> Tuple[int, int, List[int], datetime.datetime, datetime.datetime]:
-    
-    df = pd.read_sql(session.query(GenData.gen_id, Generator.loc_id, Generator.cli_id, GenData.data_date) \
-                  .join(Generator, Generator.gen_id_auto == GenData.gen_id) \
-                  .filter(GenData.data_pro_id == data_pro_id) \
-                  .statement, session.bind)
+
+    df = pd.read_sql(session.query(GenData.gen_id, Generator.loc_id, Generator.cli_id, GenData.data_date)
+                     .join(Generator, Generator.gen_id_auto == GenData.gen_id)
+                     .filter(GenData.data_pro_id == data_pro_id)
+                     .statement, session.bind)
 
     cli_id = list(set(df['cli_id']))
     loc_id = list(set(df['loc_id']))
@@ -281,7 +273,8 @@ def get_gen_ids_by_data_pro_id(session, data_pro_id: int) -> Tuple[int, int, Lis
     if len(cli_id) > 1 or len(loc_id) > 1:
         raise ValueError('data_pro_id does not correspond to a single client or location')
     return cli_id[0], loc_id[0], gen_ids, min_date, max_date
-    
+
+
 def get_co2_emissions_per_kwh(session, loc_id: int, datetime_start: datetime.datetime, datetime_end: datetime.datetime) -> pd.DataFrame:
     df = pd.read_sql(
         session.query(CtrData.data_date, CtrData.data_value)
@@ -293,7 +286,6 @@ def get_co2_emissions_per_kwh(session, loc_id: int, datetime_start: datetime.dat
         .statement, session.bind)
     df["data_date"] = df["data_date"].apply(
         lambda row: remove_microseconds(row))
-    
+
     df.rename(columns={"data_value": "co2_per_mwh"}, inplace=True)
     return df.set_index('data_date')
-
