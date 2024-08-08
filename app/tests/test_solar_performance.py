@@ -3,12 +3,11 @@ from unittest import mock
 
 import pandas as pd
 
-from app.endpoints.solar.solar_performance import performance
-from app.endpoints.solar.solar_sales import parse_request
+from app.endpoints.solar.solar_performance import parse_request, performance
 
 
 def test_parse_request():
-    param_json = '{"from": "2021/01/01T00:00:00", "to": "2021/01/02T00:00:00", "client": 1, "location": 1, "groupBy": "hour"}'
+    param_json = '{"from": "2021-01-01T00:00:00", "to": "2021-01-02T00:00:00", "client": 1, "location": 1, "groupBy": "hour", "generators": [1, 2]}'
     request = parse_request(param_json)
 
     assert request.start_date == datetime(2021, 1, 1, 0, 0, 0)
@@ -20,7 +19,7 @@ def test_parse_request():
 
 
 def test_parse_request_no_group_by():
-    param_json = '{"from": "2021/01/01T00:00:00", "to": "2021/01/02T00:00:00", "client": 1, "location": 1}'
+    param_json = '{"from": "2021-01-01T00:00:00", "to": "2021-01-02T00:00:00", "client": 1, "location": 1, "generators": [1, 2]}'
     request = parse_request(param_json)
 
     assert request.start_date == datetime(2021, 1, 1, 0, 0, 0)
