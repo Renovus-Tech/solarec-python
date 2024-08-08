@@ -4,6 +4,8 @@ from configparser import ConfigParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 
+session = None
+
 
 def get_DATABASE_URI(filename="database.ini", section="postgresql"):
     parser = ConfigParser()
