@@ -1,12 +1,13 @@
 import json
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
-from fastapi import APIRouter
-from dateutil.parser import parse
-from pydantic import BaseModel, Field
-from core.solar import Solar
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+from core.solar import Solar
+from dateutil.parser import parse
+from fastapi import APIRouter
+from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/solar/power_curve",
