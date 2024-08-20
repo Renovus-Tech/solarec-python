@@ -289,3 +289,8 @@ def get_co2_emissions_per_kwh(session, loc_id: int, datetime_start: datetime.dat
 
     df.rename(columns={"data_value": "co2_per_mwh"}, inplace=True)
     return df.set_index('data_date')
+
+
+def get_location(session, loc_id: int, cli_id: int) -> Location:
+    return session.query(Location).filter(Location.loc_id_auto == loc_id and
+                                          Location.cli_id == cli_id).first()

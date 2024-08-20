@@ -1,11 +1,11 @@
 from pydantic import BaseModel
 
-from app.nlp.llm_client import LLMClient
+from nlp.llm_client import LLMClient
 
 
 class OnboardingData(BaseModel):
     ''' Data class for onboarding data'''
-    location: str
+    address: str
     capacity: int
     installation_date: str
 
@@ -22,6 +22,6 @@ class NLPOnboardingHelper():
         data = self.client.generate_json(user_input)
         if not data:
             return None
-        return OnboardingData(location=data['location'],
+        return OnboardingData(address=data['address'],
                               capacity=data['capacity'],
                               installation_date=data['installation_date'])

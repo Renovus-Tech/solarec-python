@@ -2,7 +2,7 @@ import os
 
 import google.generativeai as genai
 
-from app.nlp.llm_client import LLMClient
+from nlp.llm_client import LLMClient
 
 
 class GeminiAIClient(LLMClient):

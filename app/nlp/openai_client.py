@@ -2,7 +2,7 @@ import os
 
 import openai
 
-from app.nlp.llm_client import LLMClient
+from nlp.llm_client import LLMClient
 
 
 class OpenAIClient(LLMClient):
