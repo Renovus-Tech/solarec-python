@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 from nlp.llm_client import LLMClient
@@ -5,9 +6,9 @@ from nlp.llm_client import LLMClient
 
 class OnboardingData(BaseModel):
     ''' Data class for onboarding data'''
-    address: str
-    capacity: int
-    installation_date: str
+    address: Optional[str]
+    capacity: Optional[int]
+    installation_date: Optional[str]
 
 
 class NLPOnboardingHelper():
@@ -22,6 +23,6 @@ class NLPOnboardingHelper():
         data = self.client.generate_json(user_input)
         if not data:
             return None
-        return OnboardingData(address=data['address'],
-                              capacity=data['capacity'],
-                              installation_date=data['installation_date'])
+        return OnboardingData(address=data.get('address', None),
+                              capacity=data.get('capacity', None),
+                              installation_date=data.get('installation_date', None))

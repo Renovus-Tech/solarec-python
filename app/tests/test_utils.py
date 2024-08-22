@@ -7,10 +7,10 @@ from db.models import CliGenAlert, GenData, Generator, Location
 from db.utils import (get_client_settings, get_co2_emissions_per_kwh,
                       get_gen_codes_and_names, get_gen_datas,
                       get_gen_datas_grouped, get_gen_ids_by_data_pro_id,
-                      get_gen_ids_by_loc_id, get_loc_output_capacity,
+                      get_gen_ids_by_loc_id, get_loc_output_capacity, get_location,
                       get_period_end, get_sta_datas, get_sta_datas_grouped,
                       get_sta_id_by_loc_id, group_by_to_pd_frequency,
-                      insert_cli_gen_alerts, remove_microseconds)
+                      insert_cli_gen_alerts, remove_microseconds, update_location)
 from mock_alchemy.mocking import UnifiedAlchemyMagicMock
 
 
@@ -465,3 +465,35 @@ def test_get_co2_emissions_per_kwh():
         assert df.shape == (3, 1)
         assert df.columns.tolist() == ["co2_per_mwh"]
         assert df["co2_per_mwh"].tolist() == [10, 20, 30]
+
+
+def test_get_location():
+    location = Location(loc_id_auto=1, loc_name="name", cli_id=1)
+
+    session = UnifiedAlchemyMagicMock(data=[
+        (
+            [mock.call.query(Location),
+             mock.call.filter(Location.loc_id_auto == location.loc_id_auto and
+                              Location.cli_id == location.cli_id)],
+            [location]
+        )])
+    assert get_location(session, location.loc_id_auto, location.cli_id) == location
+
+
+def test_update_location():
+    cli_id = 1
+    location = Location(loc_id_auto=1, loc_name="name", cli_id=cli_id)
+
+    mock_statement = mock.Mock()
+    mock_update = mock.Mock(return_value=mock_statement)
+    mock_statement.values = mock.Mock(return_value="statement")
+
+    session = UnifiedAlchemyMagicMock()
+
+    with mock.patch('sqlalchemy.sql.expression.update', mock_update):
+        with mock.patch("sqlalchemy.orm.Session.execute") as mock_execute:
+
+            mock_execute.return_value = None
+            capacity = 50
+            update_location(session, location, "address", capacity)
+            session.commit.assert_called_once()

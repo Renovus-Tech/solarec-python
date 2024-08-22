@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 from db.utils import get_location, update_location
 from nlp.llm_client_factory import LLMClientFactory
 from fastapi import APIRouter, HTTPException, status
@@ -21,9 +22,9 @@ class Request(BaseModel):
 class Response(BaseModel):
     client_id: int
     location_id: int
-    address: str
-    capacity: int
-    installation_date: str
+    address: Optional[str]
+    capacity: Optional[int]
+    installation_date: Optional[str]
 
 
 def parse_request(param_json) -> Request:
@@ -48,10 +49,6 @@ def onboard_location(param_json):
     llm_client = LLMClientFactory.create_llm_client()
     onboarding_helper = NLPOnboardingHelper(llm_client)
     response = onboarding_helper.get_onboarding_data(request.text)
-
-    if not response:
-        raise HTTPException(
-            status_code=404, detail="No data was found for the given text")
 
     update_location(location, response.address, response.capacity)
 
