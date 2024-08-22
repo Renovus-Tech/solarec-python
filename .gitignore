@@ -5,3 +5,4 @@ venv/*
 app/database.ini
 .DS_Store
 app/.coverage
+app/ml/notebooks/anomaly_detection/catboost_info/*
