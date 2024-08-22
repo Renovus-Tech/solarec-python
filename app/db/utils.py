@@ -1,6 +1,6 @@
 import datetime
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import sqlalchemy.dialects.postgresql as pq
@@ -294,3 +294,11 @@ def get_co2_emissions_per_kwh(session, loc_id: int, datetime_start: datetime.dat
 def get_location(session, loc_id: int, cli_id: int) -> Location:
     return session.query(Location).filter(Location.loc_id_auto == loc_id and
                                           Location.cli_id == cli_id).first()
+
+
+def update_location(session, location: Location, address: Optional[str], capacity: Optional[int]):
+    if address:
+        location.loc_address = address
+    if capacity:
+        location.loc_output_total_capacity = capacity
+    session.commit()

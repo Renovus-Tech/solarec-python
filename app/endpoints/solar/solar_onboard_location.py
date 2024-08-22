@@ -1,5 +1,5 @@
 import json
-from db.utils import get_location
+from db.utils import get_location, update_location
 from nlp.llm_client_factory import LLMClientFactory
 from fastapi import APIRouter, HTTPException, status
 from nlp.onboarding_helper import NLPOnboardingHelper
@@ -53,11 +53,7 @@ def onboard_location(param_json):
         raise HTTPException(
             status_code=404, detail="No data was found for the given text")
 
-    if response.address:
-        location.loc_address = response.address
-    if response.capacity:
-        location.loc_output_total_capacity = response.capacity
-    session.commit()
+    update_location(location, response.address, response.capacity)
 
     return Response(location_id=request.location_id,
                     client_id=request.client_id,
