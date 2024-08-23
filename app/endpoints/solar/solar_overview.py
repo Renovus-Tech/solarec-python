@@ -1,10 +1,11 @@
 import json
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import List
-from fastapi import APIRouter
-from dateutil.parser import parse
-from pydantic import BaseModel, Field
+
 from core.solar import Solar
+from dateutil.parser import parse
+from fastapi import APIRouter
+from pydantic import BaseModel, Field
 
 router = APIRouter(
     prefix="/solar/overview",
@@ -73,7 +74,7 @@ def overview(param_json):
                      "resultCode": 200,
                      "resultText": ''})
 
-    data = Data(productionMwh=round(data['ac_production'], 1),
+    data = Data(productionMwh=round(data['ac_production'], 3),
                 irradiationKwhM2=round(data['irradiation'], 1),
                 avgAmbientTemp=round(data['avg_ambient_temp'], 1),
                 avgModuleTemp=round(data['avg_module_temp'], 1),
