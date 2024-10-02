@@ -46,7 +46,6 @@ class Solar():
 
         self.gen_data['power'].fillna(self.gen_data['ac_production'], inplace=True)
         self.gen_data['ac_production'].fillna(self.gen_data['power'], inplace=True)
-        
 
     def _fill_missing_sta_data(self):
         all_time = pd.DataFrame({'data_date': np.arange(
@@ -78,6 +77,7 @@ class Solar():
     def _adjust_units(self):
         self.gen_data['power'] = self.gen_data['power'] / 4000
         self.gen_data['ac_production'] = self.gen_data['ac_production'] / 4000
+        self.gen_data['ac_production_prediction'] = self.gen_data['ac_production_prediction'] / 4000
         self.sta_data['irradiation'] = self.sta_data['irradiation'] / 4
 
     def _compute_calculated_columns(self):
@@ -110,7 +110,7 @@ class Solar():
 
     def fetch_data(self):
         self.gen_data = get_gen_datas_grouped(session, self.cli_id, self.gen_ids, self.datetime_start, self.datetime_end, {
-                                              501: 'power', 502: 'ac_production'})
+                                              501: 'power', 502: 'ac_production', 508: 'ac_production_prediction'})
 
         self.sta_data = get_sta_datas_grouped(session, self.cli_id, self.sta_id, self.datetime_start, self.datetime_end, {
                                               503: 'avg_ambient_temp', 504: 'avg_module_temp', 505: 'irradiation'})
@@ -134,7 +134,8 @@ class Solar():
             self.fetch_data()
 
         agg = {'power': 'sum', 'ac_production': 'sum', 'avg_ambient_temp': 'mean', 'avg_module_temp': 'mean',
-               'irradiation': 'sum', 'time_based_availability': self._get_agg_unavailable, 'from': 'first', 'count': 'sum', 'is_missing': 'sum'}
+               'irradiation': 'sum', 'time_based_availability': self._get_agg_unavailable, 'from': 'first', 'count': 'sum', 'is_missing': 'sum',
+               'ac_production_prediction': 'sum'}
 
         self.data_aggregated_by_period = self.data.reset_index().set_index(
             'data_date').groupby(['gen_id', pd.Grouper(freq=self.freq)]).agg(agg)
@@ -146,10 +147,10 @@ class Solar():
             self.fetch_aggregated_by_period()
 
         agg = {'power': 'sum', 'ac_production': 'sum', 'avg_ambient_temp': 'mean', 'avg_module_temp': 'mean',
-               'irradiation': 'mean', 'from': 'first', 'time_based_availability': 'mean', 'performance_ratio': 'mean', 'specific_yield': 'sum'}
+               'irradiation': 'mean', 'from': 'first', 'time_based_availability': 'mean', 'performance_ratio': 'mean', 'specific_yield': 'sum',
+               'ac_production_prediction': 'sum'}
 
         self.data_aggregated_by_loc_and_period = self.data_aggregated_by_period.groupby(
             'data_date').agg(agg)
 
         self._compute_agg_by_loc_and_period_calculated_columns()
-

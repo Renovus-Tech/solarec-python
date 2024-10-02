@@ -2,7 +2,9 @@ import datetime
 import time
 from typing import Dict, List, Optional, Tuple
 
+import numpy as np
 import pandas as pd
+from sqlalchemy import Float
 import sqlalchemy.dialects.postgresql as pq
 from dateutil.relativedelta import SU, relativedelta
 from db.models import (CliGenAlert, CliSetting, CtrData, GenData, Generator,
@@ -301,4 +303,62 @@ def update_location(session, location: Location, address: Optional[str], capacit
         location.loc_address = address
     if capacity:
         location.loc_output_total_capacity = capacity
+    session.commit()
+
+
+def get_gen_data(session, cli_id, gen_id, start_date, end_date) -> pd.DataFrame:
+    df = pd.read_sql(session.query(GenData.data_date, GenData.data_value, GenData.data_pro_id)
+                     .filter(GenData.cli_id == cli_id,
+                             GenData.gen_id == gen_id,
+                             GenData.data_date >= start_date,
+                             GenData.data_date < end_date,
+                             GenData.data_type_id == 502)
+                     .statement, session.bind)
+    df.columns = ['data_date', 'Generated Power', 'data_pro_id']
+    df.set_index('data_date', inplace=True)
+    return df
+
+
+def get_sta_data(session, cli_id, loc_id, start_date, end_date) -> pd.DataFrame:
+    sta_id = session.query(Station.sta_id_auto).filter(Station.cli_id == cli_id, Station.loc_id == loc_id).first()[0]
+    df = pd.read_sql(session.query(StaData.data_date, StaData.data_type_id, StaData.data_value)
+                     .filter(StaData.cli_id == cli_id,
+                             StaData.sta_id == sta_id,
+                             StaData.data_date >= start_date,
+                             StaData.data_date < end_date,
+                             StaData.data_type_id.in_([503, 505, 506, 507]))
+                     .statement, session.bind)
+
+    df = pd.pivot_table(df, values='data_value', index=['data_date'], columns='data_type_id')
+    data_type_names = {503: 'Temperature', 507: 'Precipitation Total', 506: 'Cloud Cover Total', 505: 'Shortwave Radiation'}
+    df.rename(columns=data_type_names, inplace=True)
+
+    return df
+
+
+def insert_or_update_predictions(session, cli_id: int, gen_id: int, predictions: List[Tuple[datetime.datetime, float, int]]):
+    rows_to_insert = []
+    for prediction in predictions:
+        rows_to_insert.append({
+            'cli_id': cli_id,
+            'gen_id': gen_id,
+            'data_date': prediction[0],
+            'data_type_id': 508,
+            'data_pro_id': prediction[2],
+            'data_value': prediction[1],
+            'data_date_added': datetime.datetime.now()
+        })
+
+    insert_stmt = pq.insert(GenData).values(rows_to_insert)
+
+    update_stmt = insert_stmt.on_conflict_do_update(
+        index_elements=['cli_id', 'gen_id', 'data_date', 'data_type_id'],  # Primary Key
+        set_={
+            'data_value': insert_stmt.excluded.data_value,
+            'data_pro_id': insert_stmt.excluded.data_pro_id,
+            'data_date_added': datetime.datetime.now()
+        }
+    )
+
+    session.execute(update_stmt)
     session.commit()

@@ -1,4 +1,4 @@
-from endpoints.solar import solar_overview, solar_climate, solar_performance, solar_power_curve, solar_alerts, solar_emissions, solar_certificates, solar_sales
+from endpoints.solar import solar_overview, solar_climate, solar_performance, solar_power_curve, solar_alerts, solar_emissions, solar_certificates, solar_sales, solar_anomaly_detection
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -46,6 +46,7 @@ app.include_router(solar_alerts.router)
 app.include_router(solar_emissions.router)
 app.include_router(solar_certificates.router)
 app.include_router(solar_sales.router)
+app.include_router(solar_anomaly_detection.router)
 # app.include_router(solar_onboard_location.router)
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import json
 from datetime import timedelta, datetime
-from typing import List
+from typing import List, Optional
 from db.utils import group_by_to_pd_frequency
 from fastapi import APIRouter, HTTPException
 from dateutil.parser import parse
@@ -29,6 +29,7 @@ class GenData(BaseModel):
     productionMwh: float
     acProductionMwh: float
     irradiationKwhM2: float
+    predictedACProductionMwh: Optional[float] = None
 
 
 class Data(BaseModel):
@@ -40,6 +41,7 @@ class Data(BaseModel):
     totalIrradiationKwhM2: float
     avgAmbientTemp: float
     avgModuleTemp: float
+    totalPredictedACProductionMwh: Optional[float] = None
 
 
 class Response(BaseModel):
@@ -107,13 +109,15 @@ def climate(param_json):
                                code=gen_code,
                                productionMwh=round(gen_row['power'], 3),
                                acProductionMwh=round(gen_row['ac_production'], 3),
-                               irradiationKwhM2=round(gen_row['irradiation'], 3))
+                               irradiationKwhM2=round(gen_row['irradiation'], 3),
+                               predictedACProductionMwh=round(gen_row['ac_production_prediction'], 3))
             gen_datas.append(gen_data)
 
         data = Data(**{"from": row['from'].strftime("%Y/%m/%d %H:%M:%S"),
                        "to": row['to'].strftime("%Y/%m/%d %H:%M:%S"),
                        "totalProductionMwh": round(row['power'], 3),
                        "totalACProductionMwh": round(row['ac_production'], 3),
+                       "totalPredictedACProductionMwh": round(row['ac_production_prediction'], 3),
                        "totalIrradiationKwhM2": round(row['irradiation'], 3),
                        "avgAmbientTemp": round(row['avg_ambient_temp'], 3),
                        "avgModuleTemp": round(row['avg_module_temp'], 3),
