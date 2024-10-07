@@ -266,6 +266,9 @@ def get_gen_ids_by_data_pro_id(session, data_pro_id: int) -> Tuple[int, int, Lis
                      .filter(GenData.data_pro_id == data_pro_id)
                      .statement, session.bind)
 
+    if (df.empty):
+        return None, None, None, None, None
+
     cli_id = list(set(df['cli_id']))
     loc_id = list(set(df['loc_id']))
     gen_ids = list(set(df['gen_id']))

@@ -1,13 +1,13 @@
 
 import datetime
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 import pandas as pd
 import numpy as np
 import pytz
 import joblib
 from pysolar.solar import *
 from sqlalchemy import Float
-from db.utils import get_gen_data, get_location, get_sta_data, insert_or_update_predictions
+from db.utils import get_gen_data, get_gen_ids_by_data_pro_id, get_location, get_sta_data, insert_or_update_predictions
 from db.db import session
 
 TARGET_COLUMN = 'Generated Power'
@@ -52,7 +52,27 @@ def load_model(path, prediction_capacity: Float) -> Model:
     return model
 
 
-def get_data(cli_id: int, loc_id: int, gen_id: int, start_date: datetime.datetime, end_date: datetime.datetime) -> pd.DataFrame:
+def get_data(start_date: Optional[datetime.datetime],
+             end_date: Optional[datetime.datetime],
+             cli_id: Optional[int] = None,
+             loc_id: Optional[int] = None,
+             gen_id: Optional[int] = None,
+             data_pro_id: Optional[int] = None) -> Tuple[pd.DataFrame, int, int, int, datetime.datetime, datetime.datetime, Float, Float, Float]:
+    if not data_pro_id and not (cli_id and loc_id and gen_id and start_date and end_date):
+        raise ValueError('Invalid parameters: either data_pro_id or cli_id, loc_id, gen_id, start_date and end_date must be provided')
+
+    gen_ids = None
+    if data_pro_id:
+        cli_id, loc_id, gen_ids, start_date, end_date = get_gen_ids_by_data_pro_id(session, data_pro_id)
+        if cli_id is None:
+            return pd.DataFrame(), None, None, None, None, None, None, None, None
+        gen_id = gen_ids[0]
+
+    if isinstance(start_date, int):
+        start_date = datetime.datetime.fromtimestamp(start_date)
+    if isinstance(end_date, int):
+        end_date = datetime.datetime.fromtimestamp(end_date)
+
     start_date = start_date - datetime.timedelta(hours=2)
     location = get_location(session, loc_id, cli_id)
     capacity = location.loc_output_total_capacity
@@ -61,7 +81,7 @@ def get_data(cli_id: int, loc_id: int, gen_id: int, start_date: datetime.datetim
     gen_df = get_gen_data(session, cli_id, gen_id, start_date, end_date)
     sta_df = get_sta_data(session, cli_id, loc_id, start_date, end_date)
     model_df = pd.merge(gen_df, sta_df, left_index=True, right_index=True, how='outer')
-    return model_df, capacity, latitude, longitude
+    return model_df, cli_id, loc_id, gen_id, start_date, end_date, capacity, latitude, longitude
 
 
 def resample_data(model_df: pd.DataFrame) -> pd.DataFrame:

@@ -1,7 +1,7 @@
 import json
 from datetime import timedelta, datetime
 import os
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter
 from dateutil.parser import parse
 from pydantic import BaseModel, Field
@@ -15,16 +15,17 @@ router = APIRouter(
 
 
 class Request(BaseModel):
-    cli_id: int
-    loc_id: int
-    gen_id: int
-    start_date: datetime
-    end_date: datetime
+    cli_id: Optional[int]
+    loc_id: Optional[int]
+    gen_id: Optional[int]
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
+    data_pro_id: Optional[int]
 
 
 class Chart(BaseModel):
-    from_: str = Field(alias='from')
-    to: str
+    from_: Optional[str] = Field(alias='from')
+    to: Optional[str]
     resultCode: int
     resultText: str
 
@@ -53,23 +54,31 @@ def parse_request(param_json) -> Request:
     cli_id = params.get('client')
     gen_id = params.get('generator')
     loc_id = params.get('location')
+    data_pro_id = params.get('data_pro_id')
+
+    if not data_pro_id and not (cli_id and loc_id and gen_id and start_date and end_date):
+        raise ValueError('Invalid parameters: either data_pro_id or client, location, generator, start and end dates must be provided')
 
     return Request(start_date=start_date,
                    end_date=end_date,
                    cli_id=cli_id,
                    gen_id=gen_id,
-                   loc_id=loc_id)
+                   loc_id=loc_id,
+                   data_pro_id=data_pro_id)
 
 
 @router.get("/", tags=["solar", "anomaly_detection"], response_model=Response)
 def process_anomaly_detection(param_json):
     request = parse_request(param_json)
 
-    df, loc_capacity, loc_lat, loc_long = get_data(request.cli_id, request.loc_id, request.gen_id, request.start_date, request.end_date)
+    df, cli_id, loc_id, gen_id, start_date, end_date, loc_capacity, loc_lat, loc_long = get_data(start_date=request.start_date,
+                                                                                                 end_date=request.end_date,
+                                                                                                 cli_id=request.cli_id,
+                                                                                                 loc_id=request.loc_id,
+                                                                                                 gen_id=request.gen_id,
+                                                                                                 data_pro_id=request.data_pro_id)
     if df.empty:
-        return Response(chart=Chart(**{"from": request.start_date.strftime("%Y/%m/%d %H:%M:%S"),
-                                       "to": request.end_date.strftime("%Y/%m/%d %H:%M:%S"),
-                                       "resultCode": 200,
+        return Response(chart=Chart(**{"resultCode": 200,
                                        "resultText": "No data found"}), data=[])
     model_df = resample_data(df)
     ml_model = load_model(os.path.join('ml', 'models', 'cat_boost_model.pkl'), loc_capacity)
@@ -94,11 +103,11 @@ def process_anomaly_detection(param_json):
                                  "actual": actual_power})
             datas.append(data)
 
-    save_predictions(request.cli_id, request.gen_id, predictions)
+    save_predictions(cli_id, gen_id, predictions)
 
     datas.sort(key=lambda x: x.dataDate)
-    chart = Chart(**{"from": request.start_date.strftime("%Y/%m/%d %H:%M:%S"),
-                     "to": request.end_date.strftime("%Y/%m/%d %H:%M:%S"),
+    chart = Chart(**{"from": start_date.strftime("%Y/%m/%d %H:%M:%S"),
+                     "to": end_date.strftime("%Y/%m/%d %H:%M:%S"),
                      "resultCode": 200,
                      "resultText": ''})
 
