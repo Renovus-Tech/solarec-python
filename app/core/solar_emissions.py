@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from core.solar import Solar
 from db.db import session
-from db.utils import get_client_settings, get_co2_emissions_per_kwh
+from db.utils import get_client_settings, get_co2_emissions_per_kwh, get_group_period_end_date
 
 
 def _fill_missing_data(df: pd.DataFrame, datetime_start: datetime, datetime_end: datetime) -> pd.DataFrame:
@@ -50,5 +50,6 @@ def calculate_co2_avoided(cli_id: int, loc_id: int, datetime_start: datetime, da
     agg = {'power': 'sum', 'co2_avoided': 'sum', 'cert_sold': 'sum', 'cert_generated': 'sum', 'price': 'sum', 'income': 'sum', 'from': 'first', 'co2_per_mwh': 'mean'}
 
     df = df.groupby(pd.Grouper(freq=freq)).agg(agg).fillna(0)
-    df['to'] = df.apply(solar._get_group_period_end_date, axis=1)
+
+    df['to'] = df.apply(lambda x: get_group_period_end_date(x, solar.freq, solar.datetime_end), axis=1)
     return df[['co2_avoided', 'cert_sold', 'cert_generated', 'co2_per_mwh', 'price', 'income', 'from', 'to']]

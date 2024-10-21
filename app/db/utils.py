@@ -11,6 +11,10 @@ from db.models import (CliGenAlert, CliSetting, CtrData, GenData, Generator,
                        Location, StaData, Station)
 
 
+def get_group_period_end_date(rows, freq, datetime_end):
+    return get_period_end(rows['from'], freq, datetime_end)
+
+
 def get_period_end(datetime_start, freq, end_date):
 
     period_end = None
