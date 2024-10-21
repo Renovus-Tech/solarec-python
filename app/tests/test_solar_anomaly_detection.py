@@ -20,18 +20,6 @@ def test_parse_request():
     assert request.data_pro_id == 1
 
 
-def test_parse_request():
-    param_json = '{"from": "2021-01-01T00:00:00", "to": "2021-01-02T00:00:00", "client": 1, "location": 1, "generator": 1, "data_pro_id": 1}'
-    request = parse_request(param_json)
-
-    assert request.start_date == datetime(2021, 1, 1, 0, 0, 0)
-    assert request.end_date == datetime(2021, 1, 2, 23, 59, 59)
-    assert request.cli_id == 1
-    assert request.loc_id == 1
-    assert request.gen_id == 1
-    assert request.data_pro_id == 1
-
-
 def test_parse_request_with_data_pro_id():
     param_json = '{"from": "2021-01-01T00:00:00", "to": "2021-01-02T00:00:00", "data_pro_id": 1}'
     request = parse_request(param_json)
