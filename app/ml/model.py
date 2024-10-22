@@ -27,6 +27,7 @@ class Model:
 
     def generate_input(self, loc_latitude: int, loc_longitude: int, data: pd.DataFrame) -> pd.DataFrame:
         data['Generated Power'] = data['Generated Power'] * 1000
+        data['Shortwave Radiation'] = data['Shortwave Radiation'] * 1000
         data = add_calculated_features(data, loc_latitude, loc_longitude)
         data = data[self.features]
         data[f'{TARGET_COLUMN} {1} Hour Lag'] = data[f'{TARGET_COLUMN} {1} Hour Lag'] * self.prediction_capacity / self.trained_capacity

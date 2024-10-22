@@ -322,6 +322,8 @@ def get_gen_data(session, cli_id, gen_id, start_date, end_date) -> pd.DataFrame:
                              GenData.data_type_id == 502)
                      .statement, session.bind)
     df.columns = ['data_date', 'Generated Power', 'data_pro_id']
+    df["data_date"] = df["data_date"].apply(
+        lambda row: remove_microseconds(row))
     df.set_index('data_date', inplace=True)
     return df
 
@@ -335,6 +337,8 @@ def get_sta_data(session, cli_id, loc_id, start_date, end_date) -> pd.DataFrame:
                              StaData.data_date < end_date,
                              StaData.data_type_id.in_([503, 505, 506, 507]))
                      .statement, session.bind)
+    df["data_date"] = df["data_date"].apply(
+        lambda row: remove_microseconds(row))
 
     df = pd.pivot_table(df, values='data_value', index=['data_date'], columns='data_type_id')
     data_type_names = {503: 'Temperature', 507: 'Precipitation Total', 506: 'Cloud Cover Total', 505: 'Shortwave Radiation'}
