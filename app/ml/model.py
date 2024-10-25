@@ -30,7 +30,7 @@ class Model:
         data['Shortwave Radiation'] = data['Shortwave Radiation'] * 1000
         data = add_calculated_features(data, loc_latitude, loc_longitude)
         data = data[self.features]
-        data[f'{TARGET_COLUMN} {1} Hour Lag'] = data[f'{TARGET_COLUMN} {1} Hour Lag'] * self.prediction_capacity / self.trained_capacity
+        data[f'{TARGET_COLUMN} {1} Hour Lag'] = data[f'{TARGET_COLUMN} {1} Hour Lag'] * self.trained_capacity / self.prediction_capacity
         return data
 
     def predict(self, data):
@@ -39,7 +39,7 @@ class Model:
         data = self.x_scaler.transform(data)
         prediction = self.cat_boost_model.predict(data)
         prediction = self.y_scaler.inverse_transform(prediction.reshape(-1, 1))
-        prediction = prediction * self.trained_capacity / self.prediction_capacity
+        prediction = prediction * self.prediction_capacity / self.trained_capacity
         prediction = np.where(prediction < 0, 0, prediction)
         prediction = prediction / 1000
         prediction = np.round(prediction, 3)
