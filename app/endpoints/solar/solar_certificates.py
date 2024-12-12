@@ -2,7 +2,7 @@ import json
 from datetime import timedelta, datetime
 from typing import List, Optional
 from core.solar_emissions import calculate_co2_avoided
-from db.utils import group_by_to_pd_frequency
+from db.utils import data_freq_to_pd_frequency, group_by_to_pd_frequency, pandas_frequency_to_timedelta
 from fastapi import APIRouter
 from dateutil.parser import parse
 from pydantic import BaseModel, Field
@@ -29,9 +29,11 @@ class Data(BaseModel):
     certGenerated: float
     certSold: float
 
+
 class Response(BaseModel):
     chart: Chart
     data: List[Data]
+
 
 class Request(BaseModel):
     start_date: datetime
@@ -40,6 +42,7 @@ class Request(BaseModel):
     location: int
     freq: Optional[str]
     group_by: Optional[str]
+    data_freq: Optional[str] = '15T'
 
 
 def parse_request(param_json) -> Request:
@@ -50,23 +53,26 @@ def parse_request(param_json) -> Request:
     client = params['client']
     location = params['location']
     group_by = params.get('groupBy')
+    freq = None
     if group_by:
         freq = group_by_to_pd_frequency(group_by)
-    else:
-        freq = '100Y'
-
+    params['frqNumber'] = params.get('frqNumber', 15)
+    params['frqUnit'] = params.get('frqUnit', 'm')
+    data_freq = data_freq_to_pd_frequency(params['frqNumber'], params['frqUnit'])
     return Request(start_date=start_date,
                    end_date=end_date,
                    client=client,
                    location=location,
                    freq=freq,
-                   group_by=group_by)
+                   group_by=group_by,
+                   data_freq=data_freq)
 
 
-@router.get("/", tags=["solar", "certificates"], response_model=Response)
+@ router.get("/", tags=["solar", "certificates"], response_model=Response)
 def certificates(param_json):
     request = parse_request(param_json)
-    data = calculate_co2_avoided(request.client, request.location, request.start_date, request.end_date, request.freq)
+    data_freq_timedelta = pandas_frequency_to_timedelta(request.data_freq)
+    data = calculate_co2_avoided(request.client, request.location, request.start_date, request.end_date, request.freq, request.data_freq, data_freq_timedelta)
     chart = Chart(**{"from": request.start_date.strftime("%Y/%m/%d %H:%M:%S"),
                      "to": request.end_date.strftime("%Y/%m/%d %H:%M:%S"),
                      "resultCode": 200,

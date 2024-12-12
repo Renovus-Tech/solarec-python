@@ -8,16 +8,16 @@ from db.db import session
 from db.utils import get_client_settings, get_co2_emissions_per_kwh, get_group_period_end_date
 
 
-def _fill_missing_data(df: pd.DataFrame, datetime_start: datetime, datetime_end: datetime) -> pd.DataFrame:
-    all_time = pd.DataFrame({'data_date': np.arange(datetime_start, datetime_end, timedelta(minutes=15))}).set_index('data_date')
+def _fill_missing_data(df: pd.DataFrame, datetime_start: datetime, datetime_end: datetime, data_freq_timedelta: timedelta) -> pd.DataFrame:
+    all_time = pd.DataFrame({'data_date': np.arange(datetime_start, datetime_end, data_freq_timedelta)}).set_index('data_date')
     df = pd.merge(all_time, df, how='left', left_index=True, right_index=True)
     df.ffill(inplace=True)
     df.fillna(0, inplace=True)
     return df
 
 
-def calculate_co2_avoided(cli_id: int, loc_id: int, datetime_start: datetime, datetime_end: datetime, freq: str) -> pd.DataFrame:
-    solar = Solar(cli_id, loc_id, None, None, datetime_start, datetime_end, freq)
+def calculate_co2_avoided(cli_id: int, loc_id: int, datetime_start: datetime, datetime_end: datetime, freq: str, data_freq: str, data_freq_timedelta: timedelta) -> pd.DataFrame:
+    solar = Solar(cli_id, loc_id, None, None, datetime_start, datetime_end, freq, data_freq)
 
     solar.fetch_aggregated_by_loc_and_period()
     co2 = get_co2_emissions_per_kwh(session, solar.loc_id, datetime_start, datetime_end)
@@ -36,7 +36,7 @@ def calculate_co2_avoided(cli_id: int, loc_id: int, datetime_start: datetime, da
     cert_sold_pct = int(cert_sold_pct) / 100
     cert_price = int(cert_price)
 
-    co2 = _fill_missing_data(co2, datetime_start, datetime_end)
+    co2 = _fill_missing_data(co2, datetime_start, datetime_end, data_freq_timedelta)
 
     df = solar.data[['power', 'from']].merge(co2, on='data_date', how='left')
 

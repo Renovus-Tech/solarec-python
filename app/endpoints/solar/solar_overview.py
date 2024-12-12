@@ -1,7 +1,8 @@
 import json
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
+from db.utils import data_freq_to_pd_frequency, pandas_frequency_to_timedelta
 from core.solar import Solar
 from dateutil.parser import parse
 from fastapi import APIRouter
@@ -44,6 +45,7 @@ class Request(BaseModel):
     end_date: datetime
     client: int
     location: int
+    data_freq: Optional[str] = '15T'
 
 
 def parse_request(param_json) -> Request:
@@ -53,18 +55,21 @@ def parse_request(param_json) -> Request:
                      yearfirst=True) + timedelta(days=1, seconds=-1)
     client = params['client']
     location = params['location']
+    params['frqNumber'] = params.get('frqNumber', 15)
+    params['frqUnit'] = params.get('frqUnit', 'm')
+    data_freq = data_freq_to_pd_frequency(params['frqNumber'], params['frqUnit'])
 
     return Request(start_date=start_date,
                    end_date=end_date,
                    client=client,
-                   location=location)
+                   location=location,
+                   data_freq=data_freq)
 
 
 @router.get("/", tags=["solar", "overview"], response_model=Response)
 def overview(param_json):
     request = parse_request(param_json)
-
-    solar = Solar(request.client, request.location, None, None, request.start_date, request.end_date, None)
+    solar = Solar(request.client, request.location, None, None, request.start_date, request.end_date, None, request.data_freq)
     solar.fetch_aggregated_by_loc_and_period()
 
     data = solar.data_aggregated_by_loc_and_period.iloc[0]

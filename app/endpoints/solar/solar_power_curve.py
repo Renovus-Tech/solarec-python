@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import numpy as np
 import pandas as pd
+from db.utils import data_freq_to_pd_frequency, pandas_frequency_to_timedelta
 from core.solar import Solar
 from dateutil.parser import parse
 from fastapi import APIRouter
@@ -57,6 +58,7 @@ class Request(BaseModel):
     client: int
     location: int
     generators: List[int]
+    data_freq: Optional[str] = '15T'
 
 
 def parse_request(param_json) -> Request:
@@ -67,25 +69,31 @@ def parse_request(param_json) -> Request:
     client = params['client']
     location = params['location']
     generators = params['generators']
+    params['frqNumber'] = params.get('frqNumber', 15)
+    params['frqUnit'] = params.get('frqUnit', 'm')
+    data_freq = data_freq_to_pd_frequency(params['frqNumber'], params['frqUnit'])
 
     return Request(start_date=start_date,
                    end_date=end_date,
                    client=client,
                    location=location,
-                   generators=generators)
+                   generators=generators,
+                   data_freq=data_freq)
 
 
-@router.get("/", tags=["solar", "performance"], response_model=Response)
-def performance(param_json):
+@router.get("/", tags=["solar", "power_curve"], response_model=Response)
+def power_curve(param_json):
     request = parse_request(param_json)
-
-    solar = Solar(request.client, request.location, request.generators, None, request.start_date, request.end_date, "100Y")
+    data_freq_timedelta = pandas_frequency_to_timedelta(request.data_freq)
+    solar = Solar(request.client, request.location, request.generators, None, request.start_date, request.end_date, "100Y", request.data_freq)
 
     solar.fetch_data()
     power_curve = solar.data[['ac_production', 'irradiation']]
-    power_curve["ac_production"] = power_curve["ac_production"].apply(lambda x: x * 4)
-    power_curve["irradiation"] = power_curve["irradiation"].apply(lambda x: x * 4)
-
+    seconds_in_one_hour = 60*60
+    multiplier = seconds_in_one_hour / data_freq_timedelta.total_seconds()
+    power_curve["ac_production"] = power_curve["ac_production"].apply(lambda x: x * multiplier)
+    power_curve["irradiation"] = power_curve["irradiation"].apply(lambda x: x * multiplier)
+    power_curve.fillna(0, inplace=True)
     gen_data: List[GenData] = []
     for i, gen_id in enumerate(request.generators):
         power_curve_gen = power_curve.loc[gen_id]

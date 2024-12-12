@@ -7,7 +7,7 @@ from db.db import session
 
 
 class Solar():
-    def __init__(self, cli_id: int, loc_id: int, gen_ids: List[int], sta_id: int,  datetime_start: datetime, datetime_end: datetime, freq: str):
+    def __init__(self, cli_id: int, loc_id: int, gen_ids: List[int], sta_id: int,  datetime_start: datetime, datetime_end: datetime, freq: str, data_freq: str):
         self.loc_id = loc_id
         self.gen_ids = gen_ids if gen_ids else [
             int(x) for x in get_gen_ids_by_loc_id(session, loc_id)['gen_id_auto'].values]
@@ -17,7 +17,8 @@ class Solar():
         self.datetime_end = datetime_end
         self.data: pd.DataFrame
         self.cli_id = cli_id
-        self.freq = freq if freq else '10Y'
+        self.freq = freq
+        self.data_freq = data_freq
 
         loc_total_capacity = get_loc_output_capacity(session, self.loc_id)
         self.loc_total_capacity = loc_total_capacity if loc_total_capacity else 1
@@ -34,8 +35,9 @@ class Solar():
         self.data_aggregated_by_loc_and_period: pd.DataFrame = None
 
     def _fill_missing_gen_data(self):
-        all_time = pd.DataFrame({'data_date': np.arange(
-            self.datetime_start, self.datetime_end, timedelta(minutes=15))})
+
+        date_range = pd.date_range(start=self.datetime_start, end=self.datetime_end, freq=self.data_freq)
+        all_time = pd.DataFrame({'data_date': date_range})
         all_gens = pd.DataFrame({'gen_id': self.gen_ids})
         all_time = pd.merge(all_time, all_gens, how='cross')
         self.gen_data = pd.merge(all_time, self.gen_data, left_on=[
@@ -48,8 +50,8 @@ class Solar():
         self.gen_data['ac_production'].fillna(self.gen_data['power'], inplace=True)
 
     def _fill_missing_sta_data(self):
-        all_time = pd.DataFrame({'data_date': np.arange(
-            self.datetime_start, self.datetime_end, timedelta(minutes=15))})
+        date_range = pd.date_range(start=self.datetime_start, end=self.datetime_end, freq=self.data_freq)
+        all_time = pd.DataFrame({'data_date': date_range})
         all_gens = pd.DataFrame({'sta_id': [self.sta_id]})
         all_time = pd.merge(all_time, all_gens, how='cross')
         self.sta_data = pd.merge(all_time, self.sta_data, left_on=[
@@ -74,11 +76,33 @@ class Solar():
         gen_rate_power = self.gen_codes_and_names.loc[gen_id]['gen_rate_power'] / 1000
         return rows['ac_production'] / gen_rate_power
 
-    def _adjust_units(self):
-        self.gen_data['power'] = self.gen_data['power'] / 4000
-        self.gen_data['ac_production'] = self.gen_data['ac_production'] / 4000
-        self.gen_data['ac_production_prediction'] = self.gen_data['ac_production_prediction'] / 4000
-        self.sta_data['irradiation'] = self.sta_data['irradiation'] / 4
+    def _adjust_gen_units(self):
+        self.gen_data['power'] = self.gen_data[['power']].apply(self._adjust_row_gen_units, axis=1)
+        self.gen_data['ac_production'] = self.gen_data[['ac_production']].apply(self._adjust_row_gen_units, axis=1)
+        self.gen_data['ac_production_prediction'] = self.gen_data[['ac_production_prediction']].apply(self._adjust_row_gen_units, axis=1)
+
+    def _adjust_row_gen_units(self, row):
+        row_start_date = row.name[1]
+        row_end_date = get_period_end(row_start_date, self.data_freq, self.datetime_end)
+        seconds_in_one_hour = 60*60
+        seconds_in_row_period = (row_end_date - row_start_date).total_seconds() + 1
+        divisor = seconds_in_one_hour / seconds_in_row_period
+        row_value = row[0]
+        if row_value is not None:
+            return row_value / divisor / 1000
+
+    def _adjust_sta_units(self):
+        self.sta_data['irradiation'] = self.sta_data[['irradiation']].apply(self._adjust_row_sta_units, axis=1)
+
+    def _adjust_row_sta_units(self, row):
+        row_start_date = row.name[0]
+        row_end_date = get_period_end(row_start_date, self.data_freq, self.datetime_end)
+        seconds_in_one_hour = 60*60
+        seconds_in_row_period = (row_end_date - row_start_date).total_seconds() + 1
+        divisor = seconds_in_one_hour / seconds_in_row_period
+        row_value = row[0]
+        if row_value is not None:
+            return row_value / divisor
 
     def _compute_calculated_columns(self):
         self.data['from'] = self.data.index.get_level_values(1)
@@ -115,7 +139,8 @@ class Solar():
         self.sta_data = get_sta_datas_grouped(session, self.cli_id, self.sta_id, self.datetime_start, self.datetime_end, {
                                               503: 'avg_ambient_temp', 504: 'avg_module_temp', 505: 'irradiation'})
 
-        self._adjust_units()
+        self._adjust_gen_units()
+        self._adjust_sta_units()
         self._fill_missing_gen_data()
         self._fill_missing_sta_data()
 
@@ -123,7 +148,9 @@ class Solar():
         self._compute_calculated_columns()
 
     def _get_group_period_end_date(self, rows):
-        return get_period_end(rows['from'], self.freq, self.datetime_end)
+        if self.freq:
+            return get_period_end(rows['from'], self.freq, self.datetime_end)
+        return self.datetime_end
 
     def _get_agg_unavailable(self, rows):
         periods = len(rows)
@@ -137,8 +164,15 @@ class Solar():
                'irradiation': 'sum', 'time_based_availability': self._get_agg_unavailable, 'from': 'first', 'count': 'sum', 'is_missing': 'sum',
                'ac_production_prediction': 'sum'}
 
-        self.data_aggregated_by_period = self.data.reset_index().set_index(
-            'data_date').groupby(['gen_id', pd.Grouper(freq=self.freq)]).agg(agg)
+        if self.freq:
+            self.data_aggregated_by_period = self.data.reset_index().set_index(
+                'data_date').groupby(['gen_id', pd.Grouper(freq=self.freq)]).agg(agg)
+        else:
+            agg['data_date'] = 'first'
+            self.data_aggregated_by_period = self.data.reset_index().set_index('gen_id').groupby('gen_id').agg(agg)
+
+            self.data_aggregated_by_period.set_index(
+                'data_date', append=True, inplace=True)
 
         self._compute_agg_by_period_calculated_columns()
 

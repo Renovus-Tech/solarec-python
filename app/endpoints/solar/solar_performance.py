@@ -1,8 +1,8 @@
 import json
 from datetime import timedelta, datetime
 from typing import List, Optional
-from db.utils import group_by_to_pd_frequency
-from fastapi import APIRouter
+from db.utils import data_freq_to_pd_frequency, group_by_to_pd_frequency, pandas_frequency_to_timedelta
+from fastapi import APIRouter, HTTPException
 from dateutil.parser import parse
 from pydantic import BaseModel, Field
 from core.solar import Solar
@@ -57,6 +57,7 @@ class Request(BaseModel):
     generators: List[int]
     freq: Optional[str]
     group_by: Optional[str]
+    data_freq: Optional[str] = '15T'
 
 
 def parse_request(param_json) -> Request:
@@ -68,10 +69,13 @@ def parse_request(param_json) -> Request:
     location = params['location']
     generators = params['generators']
     group_by = params.get('groupBy')
+    freq = None
     if group_by:
         freq = group_by_to_pd_frequency(group_by)
-    else:
-        freq = '100Y'
+
+    params['frqNumber'] = params.get('frqNumber', 15)
+    params['frqUnit'] = params.get('frqUnit', 'm')
+    data_freq = data_freq_to_pd_frequency(params['frqNumber'], params['frqUnit'])
 
     return Request(start_date=start_date,
                    end_date=end_date,
@@ -79,6 +83,7 @@ def parse_request(param_json) -> Request:
                    location=location,
                    generators=generators,
                    freq=freq,
+                   data_freq=data_freq,
                    group_by=group_by)
 
 
@@ -86,7 +91,12 @@ def parse_request(param_json) -> Request:
 def performance(param_json):
     request = parse_request(param_json)
 
-    solar = Solar(request.client, request.location, request.generators, None, request.start_date, request.end_date, request.freq)
+    data_freq_timedelta = pandas_frequency_to_timedelta(request.data_freq)
+    freq_timedelta = pandas_frequency_to_timedelta(request.freq)
+    if freq_timedelta < data_freq_timedelta:
+        raise HTTPException(status_code=400, detail=f'Invalid group_by {request.group_by} for frequence {request.data_freq}')
+
+    solar = Solar(request.client, request.location, request.generators, None, request.start_date, request.end_date, request.freq, request.data_freq)
 
     solar.fetch_aggregated_by_loc_and_period()
 

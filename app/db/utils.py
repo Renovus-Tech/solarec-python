@@ -32,13 +32,16 @@ def get_period_end(datetime_start, freq, end_date):
         period_end = datetime_start + \
             relativedelta(weekday=SU, days=1, hour=23, minute=59, second=59)
 
-    if freq == "1M":
+    if freq == "1M" or freq == "1MS":
         period_end = datetime_start + \
             relativedelta(months=1, day=1, days=-1,
                           hour=23, minute=59, second=59)
 
     if freq == "1Y":
         period_end = datetime.datetime(datetime_start.year, 12, 31, 23, 59, 59)
+
+    if freq == "15T":
+        period_end = datetime_start + relativedelta(minutes=15, seconds=-1)
 
     if period_end is None or period_end > end_date:
         return datetime.datetime(end_date.year, end_date.month, end_date.day, 23, 59, 59)
@@ -62,6 +65,57 @@ def group_by_to_pd_frequency(group_by):
 
     if group_by == "year":
         return "1Y"
+
+
+def data_freq_to_pd_frequency(frqNumber: int, frqUnit: str) -> str:
+
+    if frqUnit == 'm':
+        return f"{frqNumber}T"
+
+    if frqUnit == 'h':
+        return f"{frqNumber}H"
+
+    if frqUnit == 'd':
+        return f"{frqNumber}D"
+
+    if frqUnit == 'w':
+        return f"{frqNumber}W"
+
+    if frqUnit == 't':
+        return f"{frqNumber}MS"
+
+    if frqUnit == 'y':
+        return f"{frqNumber}Y"
+
+    return None
+
+
+def pandas_frequency_to_timedelta(freq):
+    freq_map = {
+        'D': datetime.timedelta(days=1),
+        'H': datetime.timedelta(hours=1),
+        'T': datetime.timedelta(minutes=1),
+        'W': datetime.timedelta(weeks=1),
+        'M': relativedelta(months=1),
+        'MS': relativedelta(months=1),
+        'Y': relativedelta(years=1)
+    }
+
+    def convert_to_timedelta(freq_timedelta):
+        if isinstance(freq_timedelta, relativedelta):
+            # Asume 30 days per month and 365 days per year
+            days = freq_timedelta.years * 365 + freq_timedelta.months * 30
+            return datetime.timedelta(days=days)
+        return freq_timedelta
+
+    multiplier = 1
+    for key in freq_map:
+        if freq.endswith(key):
+            if freq[:-len(key)].isdigit():
+                multiplier = int(freq[:-len(key)])
+            return convert_to_timedelta(freq_map[key] * multiplier)
+
+    raise ValueError(f"Frequency not supported: {freq}")
 
 
 def remove_microseconds(row):
