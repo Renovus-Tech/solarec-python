@@ -75,7 +75,7 @@ def test_solar_fetch_data(mock_get_sta_datas_grouped, mock_get_gen_datas_grouped
         "gen_rate_power": [1000, 2000]
     })
 
-    mock_get_gen_datas_grouped.return_value = pd.DataFrame({
+    gen_datas_return_value = pd.DataFrame({
         "gen_id": [1, 1, 2, 2],
         "data_date": [datetime(2021, 1, 1, 0, 0, 0),
                       datetime(2021, 1, 1, 0, 15, 0),
@@ -85,8 +85,10 @@ def test_solar_fetch_data(mock_get_sta_datas_grouped, mock_get_gen_datas_grouped
         "ac_production": [15, 25, 35, 45],
         "ac_production_prediction": [11, 22, 33, 44]
     })
+    gen_datas_return_value.set_index(["gen_id", "data_date"], inplace=True)
+    mock_get_gen_datas_grouped.return_value = gen_datas_return_value
 
-    mock_get_sta_datas_grouped.return_value = pd.DataFrame({
+    sta_datas_return_value = pd.DataFrame({
         "sta_id": [1, 1, 1],
         "data_date": [datetime(2021, 1, 1, 0, 0, 0),
                       datetime(2021, 1, 1, 0, 15, 0),
@@ -95,6 +97,8 @@ def test_solar_fetch_data(mock_get_sta_datas_grouped, mock_get_gen_datas_grouped
         "avg_module_temp": [10, 20, 30],
         "irradiation": [50, 60, 70]
     })
+    sta_datas_return_value.set_index(["data_date", "sta_id"], inplace=True)
+    mock_get_sta_datas_grouped.return_value = sta_datas_return_value
 
     solar = Solar(1, 1, None, None, datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 0, 45, 0), "1H")
     solar.fetch_data()
@@ -189,7 +193,7 @@ def test_solar_fetch_aggregated_by_period(mock_get_sta_datas_grouped, mock_get_g
         "gen_rate_power": [1000, 2000]
     }, index=[1, 2])
 
-    mock_get_gen_datas_grouped.return_value = pd.DataFrame({
+    gen_datas_return_value = pd.DataFrame({
         "gen_id": [1, 1, 2, 2],
         "data_date": [datetime(2021, 1, 1, 0, 0, 0),
                       datetime(2021, 1, 1, 0, 15, 0),
@@ -199,8 +203,10 @@ def test_solar_fetch_aggregated_by_period(mock_get_sta_datas_grouped, mock_get_g
         "ac_production": [15, 25, 35, 45],
         "ac_production_prediction": [11, 22, 33, 44]
     })
+    gen_datas_return_value.set_index(["gen_id", "data_date"], inplace=True)
+    mock_get_gen_datas_grouped.return_value = gen_datas_return_value
 
-    mock_get_sta_datas_grouped.return_value = pd.DataFrame({
+    sta_datas_return_value = pd.DataFrame({
         "sta_id": [1, 1, 1],
         "data_date": [datetime(2021, 1, 1, 0, 0, 0),
                       datetime(2021, 1, 1, 0, 15, 0),
@@ -209,6 +215,8 @@ def test_solar_fetch_aggregated_by_period(mock_get_sta_datas_grouped, mock_get_g
         "avg_module_temp": [10, 20, 30],
         "irradiation": [50, 60, 70]
     })
+    sta_datas_return_value.set_index(["data_date", "sta_id"], inplace=True)
+    mock_get_sta_datas_grouped.return_value = sta_datas_return_value
 
     solar = Solar(1, 1, None, None, datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 2, 0, 0), "1H")
     solar.fetch_aggregated_by_period()
@@ -296,7 +304,7 @@ def test_solar_fetch_aggregated_by_loc_and_period(mock_get_sta_datas_grouped, mo
         "gen_rate_power": [1000, 2000]
     }, index=[1, 2])
 
-    mock_get_gen_datas_grouped.return_value = pd.DataFrame({
+    gen_datas_return_value = pd.DataFrame({
         "gen_id": [1, 1, 2, 2],
         "data_date": [datetime(2021, 1, 1, 0, 0, 0),
                       datetime(2021, 1, 1, 0, 15, 0),
@@ -306,8 +314,10 @@ def test_solar_fetch_aggregated_by_loc_and_period(mock_get_sta_datas_grouped, mo
         "ac_production": [15, 25, 35, 45],
         "ac_production_prediction": [11, 22, 33, 44]
     })
+    gen_datas_return_value.set_index(["gen_id", "data_date"], inplace=True)
+    mock_get_gen_datas_grouped.return_value = gen_datas_return_value
 
-    mock_get_sta_datas_grouped.return_value = pd.DataFrame({
+    sta_datas_return_value = pd.DataFrame({
         "sta_id": [1, 1, 1],
         "data_date": [datetime(2021, 1, 1, 0, 0, 0),
                       datetime(2021, 1, 1, 0, 15, 0),
@@ -316,6 +326,8 @@ def test_solar_fetch_aggregated_by_loc_and_period(mock_get_sta_datas_grouped, mo
         "avg_module_temp": [10, 20, 30],
         "irradiation": [50, 60, 70]
     })
+    sta_datas_return_value.set_index(["data_date", "sta_id"], inplace=True)
+    mock_get_sta_datas_grouped.return_value = sta_datas_return_value
 
     solar = Solar(1, 1, None, None, datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 2, 0, 0), "1H")
     solar.fetch_aggregated_by_loc_and_period()
