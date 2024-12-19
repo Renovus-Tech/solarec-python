@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from db.utils import data_freq_to_pd_frequency, pandas_frequency_to_timedelta
+from db.utils import data_freq_to_pd_frequency
 from core.solar import Solar
 from dateutil.parser import parse
 from fastapi import APIRouter

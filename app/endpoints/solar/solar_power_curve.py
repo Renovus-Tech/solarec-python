@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import numpy as np
 import pandas as pd
-from db.utils import data_freq_to_pd_frequency, pandas_frequency_to_timedelta
+from db.utils import data_freq_to_pd_frequency, get_period_end
 from core.solar import Solar
 from dateutil.parser import parse
 from fastapi import APIRouter
@@ -81,18 +81,27 @@ def parse_request(param_json) -> Request:
                    data_freq=data_freq)
 
 
+def _adjust_units(row, data_freq, datetime_end):
+    row_start_date = row.name[1]
+    row_end_date = get_period_end(row_start_date, data_freq, datetime_end)
+    seconds_in_one_hour = 60*60
+    seconds_in_row_period = (row_end_date - row_start_date).total_seconds() + 1
+    multiplier = seconds_in_one_hour / seconds_in_row_period
+    row_value = row[0]
+    if row_value is not None:
+        return row_value * multiplier
+
+
 @router.get("/", tags=["solar", "power_curve"], response_model=Response)
 def power_curve(param_json):
     request = parse_request(param_json)
-    data_freq_timedelta = pandas_frequency_to_timedelta(request.data_freq)
     solar = Solar(request.client, request.location, request.generators, None, request.start_date, request.end_date, "100Y", request.data_freq)
 
     solar.fetch_data()
     power_curve = solar.data[['ac_production', 'irradiation']]
-    seconds_in_one_hour = 60*60
-    multiplier = seconds_in_one_hour / data_freq_timedelta.total_seconds()
-    power_curve["ac_production"] = power_curve["ac_production"].apply(lambda x: x * multiplier)
-    power_curve["irradiation"] = power_curve["irradiation"].apply(lambda x: x * multiplier)
+
+    power_curve["ac_production"] = power_curve[["ac_production"]].apply(lambda x: _adjust_units(x, request.data_freq, request.end_date), axis=1)
+    power_curve["irradiation"] = power_curve[["irradiation"]].apply(lambda x: _adjust_units(x, request.data_freq, request.end_date), axis=1)
     power_curve.fillna(0, inplace=True)
     gen_data: List[GenData] = []
     for i, gen_id in enumerate(request.generators):

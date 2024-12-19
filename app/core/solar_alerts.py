@@ -1,6 +1,8 @@
 from datetime import datetime
 import json
 from typing import List, Optional, Tuple
+
+import numpy as np
 from core.solar import Solar
 from db.utils import get_client_settings, get_gen_ids_by_data_pro_id, insert_cli_gen_alerts
 from db.db import session
@@ -44,8 +46,14 @@ def calculate_alerts(datetime_start: Optional[datetime], datetime_end: Optional[
     data['missing_percentage'] = 100 - ((MAX_DATA_PER_DAY - data['prev_missing']) / MAX_DATA_PER_DAY) * 100
 
     data['ac_production_prediction'].fillna(data['ac_production'], inplace=True)
-    data['ac_production_prediction'] = data['ac_production_prediction'].apply(lambda x: x if x != 0 else data['ac_production'])
-    data['production_diff_percentage'] = data['ac_production'] * 100 / data['ac_production_prediction']
+    data['ac_production_prediction'] = np.where(
+        data['ac_production_prediction'] == 0,
+        data['ac_production'],
+        data['ac_production_prediction'])
+    data['production_diff_percentage'] = np.where(
+        data['ac_production_prediction'] != 0,
+        data['ac_production'] * 100 / np.where(data['ac_production_prediction'] != 0, data['ac_production_prediction'], 1),
+        0)
 
     for i, rows in data.groupby(level=0):
         alert_1 = rows['missing_percentage'] >= alert_1_threshold

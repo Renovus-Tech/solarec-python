@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 import numpy as np
 import pandas as pd
 from db.utils import get_gen_codes_and_names, get_gen_datas_grouped, get_gen_ids_by_loc_id, get_period_end, get_sta_datas_grouped, get_sta_id_by_loc_id, get_loc_output_capacity, insert_cli_gen_alerts
@@ -7,7 +7,7 @@ from db.db import session
 
 
 class Solar():
-    def __init__(self, cli_id: int, loc_id: int, gen_ids: List[int], sta_id: int,  datetime_start: datetime, datetime_end: datetime, freq: str, data_freq: str):
+    def __init__(self, cli_id: int, loc_id: int, gen_ids: List[int], sta_id: int,  datetime_start: datetime, datetime_end: datetime, freq: str, data_freq: Optional[str] = '15T'):
         self.loc_id = loc_id
         self.gen_ids = gen_ids if gen_ids else [
             int(x) for x in get_gen_ids_by_loc_id(session, loc_id)['gen_id_auto'].values]

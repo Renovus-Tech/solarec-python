@@ -90,10 +90,11 @@ def parse_request(param_json) -> Request:
 def climate(param_json):
     request = parse_request(param_json)
 
-    data_freq_timedelta = pandas_frequency_to_timedelta(request.data_freq)
-    freq_timedelta = pandas_frequency_to_timedelta(request.freq)
-    if freq_timedelta < data_freq_timedelta:
-        raise HTTPException(status_code=400, detail=f'Invalid group_by {request.group_by} for frequence {request.data_freq}')
+    if request.freq is not None:
+        data_freq_timedelta = pandas_frequency_to_timedelta(request.data_freq)
+        freq_timedelta = pandas_frequency_to_timedelta(request.freq)
+        if freq_timedelta < data_freq_timedelta:
+            raise HTTPException(status_code=400, detail=f'Invalid group_by {request.group_by} for frequence {request.data_freq}')
 
     solar = Solar(request.client, request.location, None, None, request.start_date, request.end_date, request.freq, request.data_freq)
     for gen_id in request.generators:
