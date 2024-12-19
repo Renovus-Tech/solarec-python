@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 from typing import List, Optional, Tuple
 
+from fastapi import HTTPException
 import numpy as np
 from core.solar import Solar
 from db.utils import get_client_settings, get_gen_ids_by_data_pro_id, insert_cli_gen_alerts
@@ -18,10 +19,13 @@ MAX_DATA_PER_DAY = 24 * 60 / 15
 def calculate_alerts(datetime_start: Optional[datetime], datetime_end: Optional[datetime], data_pro_id: Optional[int] = None, cli_id: Optional[int] = None, loc_id: Optional[int] = None) -> Tuple[int, int, List[int], datetime, datetime, int]:
 
     if not data_pro_id and not (cli_id and loc_id and datetime_start and datetime_end):
-        raise ValueError('Invalid parameters: either data_pro_id or cli_id, loc_id, datetime_start and datetime_end must be provided')
+        raise HTTPException(status_code=400, detail='Invalid parameters: either data_pro_id or cli_id, loc_id, datetime_start and datetime_end must be provided')
     gen_ids = None
     if data_pro_id:
         cli_id, loc_id, gen_ids, datetime_start, datetime_end = get_gen_ids_by_data_pro_id(session, data_pro_id)
+
+    if cli_id is None or loc_id is None:
+        raise HTTPException(status_code=400, detail='data_pro_id not found')
 
     solar = Solar(cli_id=cli_id, loc_id=loc_id, datetime_start=datetime_start, datetime_end=datetime_end, freq='1D', gen_ids=gen_ids, sta_id=None)
     solar.fetch_aggregated_by_period()

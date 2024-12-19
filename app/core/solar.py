@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
+from fastapi import HTTPException
 import numpy as np
 import pandas as pd
 from db.utils import get_gen_codes_and_names, get_gen_datas_grouped, get_gen_ids_by_loc_id, get_period_end, get_sta_datas_grouped, get_sta_id_by_loc_id, get_loc_output_capacity, insert_cli_gen_alerts
@@ -11,8 +12,13 @@ class Solar():
         self.loc_id = loc_id
         self.gen_ids = gen_ids if gen_ids else [
             int(x) for x in get_gen_ids_by_loc_id(session, loc_id)['gen_id_auto'].values]
-        self.sta_id = sta_id if sta_id else int(
-            get_sta_id_by_loc_id(session, loc_id)['sta_id_auto'][0])
+        if sta_id:
+            self.sta_id = sta_id
+        else:
+            station = get_sta_id_by_loc_id(session, loc_id)
+            if station.empty:
+                raise HTTPException(status_code=400, detail=f'No station found for location {loc_id}')
+            self.sta_id = int(station['sta_id_auto'][0])
         self.datetime_start = datetime_start
         self.datetime_end = datetime_end
         self.data: pd.DataFrame
