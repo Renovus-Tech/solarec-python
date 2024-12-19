@@ -19,14 +19,15 @@ def test_parse_request():
 
 
 def test_parse_request_no_group_by():
-    param_json = '{"from": "2021-01-01T00:00:00", "to": "2021-01-02T00:00:00", "client": 1, "location": 1}'
+    param_json = '{"from": "2021-01-01T00:00:00", "to": "2021-01-02T00:00:00", "client": 1, "location": 1, "frqUnit": "t", "frqNumber": 15}'
     request = parse_request(param_json)
 
     assert request.start_date == datetime(2021, 1, 1, 0, 0, 0)
     assert request.end_date == datetime(2021, 1, 2, 23, 59, 59)
     assert request.client == 1
     assert request.location == 1
-    assert request.freq == "100Y"
+    assert request.freq == None
+    assert request.data_freq == "15MS"
     assert request.group_by == None
 
 

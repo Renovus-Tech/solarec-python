@@ -20,6 +20,7 @@ def test_calculate_co2_avoided(mock_get_client_settings, mock_get_co2_emissions_
     with mock.patch("app.core.solar_emissions.Solar") as mock_solar:
         mock_solar_instance = mock_solar.return_value
         mock_solar_instance.freq = "1H"
+        mock_solar_instance.data_freq = "15T"
         mock_solar_instance.datetime_end = datetime(2021, 1, 1, 23, 59, 59)
         mock_solar_instance.fetch_aggregated_by_loc_and_period.return_value = None
         solar_data = pd.DataFrame({
@@ -32,7 +33,7 @@ def test_calculate_co2_avoided(mock_get_client_settings, mock_get_co2_emissions_
         solar_data.set_index("data_date", inplace=True)
         mock_solar_instance.data = solar_data
 
-        df = calculate_co2_avoided(1, 1, datetime(2021, 1, 1, 0, 0), datetime(2021, 1, 1, 1, 0), "1H")
+        df = calculate_co2_avoided(1, 1, datetime(2021, 1, 1, 0, 0), datetime(2021, 1, 1, 1, 0), "1H", "15T")
 
         assert df is not None
         assert df["co2_avoided"].sum() == 0.5 + 0.6
