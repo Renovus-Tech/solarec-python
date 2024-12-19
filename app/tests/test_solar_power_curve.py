@@ -4,7 +4,7 @@ from unittest import mock
 import pandas as pd
 
 from app.endpoints.solar.solar_performance import parse_request
-from app.endpoints.solar.solar_power_curve import performance
+from app.endpoints.solar.solar_power_curve import power_curve
 
 
 def test_parse_request():
@@ -31,7 +31,7 @@ def test_parse_request_no_group_by():
     assert request.group_by == None
 
 
-def test_performance():
+def test_power_curve():
 
     with mock.patch("app.endpoints.solar.solar_power_curve.Solar") as mock_solar:
         param_json = '{"from": "2021-01-01T00:00:00", "to": "2021-01-02T00:00:00", "client": 1, "location": 1, "generators": [1, 2]}'
@@ -40,8 +40,8 @@ def test_performance():
             "ac_production": [10, 20, 30, 12, 22, 32],
             "irradiation": [0.1, 0.2, 0.3, 0.1, 0.2, 0.3],
             "gen_id": [1, 1, 1, 2, 2, 2],
-            "timestamp": ["2021-01-01 00:00:00", "2021-01-01 01:00:00", "2021-01-01 02:00:00",
-                          "2021-01-01 00:00:00", "2021-01-01 01:00:00", "2021-01-01 02:00:00"]
+            "timestamp": [datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 1, 0, 0), datetime(2021, 1, 1, 2, 0, 0),
+                          datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 1, 0, 0), datetime(2021, 1, 1, 2, 0, 0)]
         })
         mock_solar_instance.data.set_index(["gen_id", "timestamp"], inplace=True)
 
@@ -50,7 +50,7 @@ def test_performance():
 
         mock_solar_instance.fetch_data.return_value = None
 
-        response = performance(param_json)
+        response = power_curve(param_json)
 
         assert response.chart.from_ == "2021-01-01 00:00:00"
         assert response.chart.to == "2021-01-02 23:59:59"
