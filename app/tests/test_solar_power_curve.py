@@ -27,7 +27,7 @@ def test_parse_request_no_group_by():
     assert request.end_date == datetime(2021, 1, 2, 23, 59, 59)
     assert request.client == 1
     assert request.location == 1
-    assert request.freq == "100Y"
+    assert request.freq == None
     assert request.group_by == None
 
 
