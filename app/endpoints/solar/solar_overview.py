@@ -33,6 +33,7 @@ class Data(BaseModel):
     timeBasedAvailability: float
     specificYield: float
     performanceRatio: float
+    certificates: float
 
 
 class Response(BaseModel):
@@ -79,7 +80,8 @@ def overview(param_json):
                      "resultCode": 200,
                      "resultText": ''})
 
-    data = Data(productionMwh=round(data['ac_production'], 3),
+    ac_production = round(data['ac_production'], 3)
+    data = Data(productionMwh=ac_production,
                 irradiationKwhM2=round(data['irradiation'], 1),
                 avgAmbientTemp=round(data['avg_ambient_temp'], 1),
                 avgModuleTemp=round(data['avg_module_temp'], 1),
@@ -88,6 +90,7 @@ def overview(param_json):
                 timeBasedAvailability=round(data['time_based_availability'] * 100, 1),
                 code=solar.gen_codes,
                 id=solar.gen_ids,
-                name=solar.gen_names)
+                name=solar.gen_names,
+                certificates=ac_production)
 
     return Response(chart=chart, data=[data])
