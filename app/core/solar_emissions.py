@@ -5,55 +5,43 @@ import numpy as np
 import pandas as pd
 from core.solar import Solar
 from db.db import session
-from db.utils import get_client_settings, get_co2_emissions_per_kwh, get_group_period_end_date
-
-
-def _fill_missing_data(df: pd.DataFrame, datetime_start: datetime, datetime_end: datetime, data_freq: str) -> pd.DataFrame:
-    date_range = pd.date_range(start=datetime_start, end=datetime_end, freq=data_freq)
-    all_time = pd.DataFrame({'data_date': date_range})
-    all_time.set_index('data_date', inplace=True)
-    df = pd.merge(all_time, df, how='left', left_index=True, right_index=True)
-    df.ffill(inplace=True)
-    df.fillna(0, inplace=True)
-    return df
+from db.utils import get_client_settings, get_co2_emissions_tons_per_Mwh, get_group_period_end_date
 
 
 def calculate_co2_avoided(cli_id: int, loc_id: int, datetime_start: datetime, datetime_end: datetime, freq: str, data_freq: str) -> pd.DataFrame:
     solar = Solar(cli_id, loc_id, None, None, datetime_start, datetime_end, freq, data_freq)
-
     solar.fetch_aggregated_by_loc_and_period()
-    co2 = get_co2_emissions_per_kwh(session, solar.loc_id, datetime_start, datetime_end)
+
+    co2_per_mwh = get_co2_emissions_tons_per_Mwh(session, solar.loc_id, datetime_start)
     client_settings = get_client_settings(session, cli_id)
 
-    if 'certSoldPorcentage' in client_settings.index:
-        cert_sold_pct = client_settings.loc['certSoldPorcentage']['cli_set_value'] or 0
-    else:
-        cert_sold_pct = 0
+    cert_sold_pct = int(client_settings.loc['certSoldPorcentage']['cli_set_value']) / 100 if 'certSoldPorcentage' in client_settings.index else 0
+    cert_price = int(client_settings.loc['certPrice']['cli_set_value']) if 'certPrice' in client_settings.index else 0
 
-    if 'certPrice' in client_settings.index:
-        cert_price = client_settings.loc['certPrice']['cli_set_value'] or 0
-    else:
-        cert_price = 0
+    df = solar.data_aggregated_by_loc_and_period[['power', 'from']]
 
-    cert_sold_pct = int(cert_sold_pct) / 100
-    cert_price = int(cert_price)
-
-    co2 = _fill_missing_data(co2, datetime_start, datetime_end, data_freq)
-
-    df = solar.data[['power', 'from']].merge(co2, on='data_date', how='left')
-
+    df['co2_per_mwh'] = co2_per_mwh
     df['cert_generated'] = df['power']
     df['co2_avoided'] = df['power'] * df['co2_per_mwh']
-    df['cert_generated'] = df['power']
     df['cert_sold'] = df['cert_generated'] * cert_sold_pct
     df['price'] = df['cert_generated'] * cert_price
     df['income'] = df['cert_sold'] * cert_price
-    # co2_per_mwh should be the average of the period
-    agg = {'power': 'sum', 'co2_avoided': 'sum', 'cert_sold': 'sum', 'cert_generated': 'sum', 'price': 'sum', 'income': 'sum', 'from': 'first', 'co2_per_mwh': 'mean'}
+
+    agg = {
+        'power': 'sum',
+        'co2_avoided': 'sum',
+        'cert_sold': 'sum',
+        'cert_generated': 'sum',
+        'price': 'sum',
+        'income': 'sum',
+        'from': 'first',
+        'co2_per_mwh': 'mean'
+    }
 
     if freq is not None:
         df = df.groupby(pd.Grouper(freq=freq)).agg(agg)
-    df.fillna(0, inplace=True)
 
+    df.fillna(0, inplace=True)
     df['to'] = df.apply(lambda x: get_group_period_end_date(x, solar.freq, solar.datetime_end), axis=1)
+
     return df[['co2_avoided', 'cert_sold', 'cert_generated', 'co2_per_mwh', 'price', 'income', 'from', 'to']]

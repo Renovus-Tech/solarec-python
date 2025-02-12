@@ -2,10 +2,11 @@ import datetime
 import time
 from typing import Dict, List, Optional, Tuple
 
-import numpy as np
 import pandas as pd
-from sqlalchemy import Float
+from sqlalchemy.orm import Session
 import sqlalchemy.dialects.postgresql as pq
+from sqlalchemy.sql import func
+from sqlalchemy.sql.expression import extract
 from dateutil.relativedelta import SU, relativedelta
 from db.models import (CliGenAlert, CliSetting, CtrData, GenData, Generator,
                        Location, StaData, Station)
@@ -338,20 +339,30 @@ def get_gen_ids_by_data_pro_id(session, data_pro_id: int) -> Tuple[int, int, Lis
     return cli_id[0], loc_id[0], gen_ids, min_date, max_date
 
 
-def get_co2_emissions_per_kwh(session, loc_id: int, datetime_start: datetime.datetime, datetime_end: datetime.datetime) -> pd.DataFrame:
-    df = pd.read_sql(
-        session.query(CtrData.data_date, CtrData.data_value)
+def get_co2_emissions_tons_per_Mwh(session: Session, loc_id: int, datetime_start: datetime.datetime) -> float:
+    year = datetime_start.year
+    years_to_check = [year - 1, year - 2, year - 3]
+
+    query = (
+        session.query(
+            extract('year', CtrData.data_date).label("year"),
+            func.avg(CtrData.data_value).label("avg_co2")
+        )
         .join(Location, Location.ctr_id == CtrData.ctr_id)
         .filter(Location.loc_id_auto == loc_id)
         .filter(CtrData.data_type_id == 901)
-        .filter(CtrData.data_date < datetime_end)
-        .filter(CtrData.data_date >= datetime_start)
-        .statement, session.bind)
-    df["data_date"] = df["data_date"].apply(
-        lambda row: remove_microseconds(row))
+        .filter(extract('year', CtrData.data_date).in_(years_to_check))
+        .group_by(extract('year', CtrData.data_date))
+    )
 
-    df.rename(columns={"data_value": "co2_per_mwh"}, inplace=True)
-    return df.set_index('data_date')
+    results = session.execute(query).fetchall()
+
+    if not results:
+        return 0.0
+
+    valid_averages = [row.avg_co2 for row in results if row.avg_co2 is not None]
+    average = sum(valid_averages) / len(valid_averages) if valid_averages else 0.0
+    return average / 1000  # Convert from g/kWh to t/MWh
 
 
 def get_location(session, loc_id: int, cli_id: int) -> Location:

@@ -4,7 +4,7 @@ from unittest import mock
 import pandas as pd
 import pytest
 from db.models import CliGenAlert, GenData, Generator, Location
-from db.utils import (get_client_settings, get_co2_emissions_per_kwh,
+from db.utils import (get_client_settings, get_co2_emissions_tons_per_Mwh,
                       get_gen_codes_and_names, get_gen_datas,
                       get_gen_datas_grouped, get_gen_ids_by_data_pro_id,
                       get_gen_ids_by_loc_id, get_loc_output_capacity, get_location,
@@ -444,27 +444,6 @@ def test_get_gen_ids_by_data_pro_id_multi_cli_loc():
 
         with pytest.raises(ValueError):
             get_gen_ids_by_data_pro_id(session, data_pro_id)
-
-
-def test_get_co2_emissions_per_kwh():
-    loc_id = 1
-    datetime_start = datetime(2021, 1, 1, 0, 0, 0)
-    datetime_end = datetime(2021, 1, 2, 0, 0, 0)
-    session = UnifiedAlchemyMagicMock()
-
-    with mock.patch("pandas.read_sql") as mock_read_sql:
-        mock_read_sql.return_value = pd.DataFrame({
-            "data_date": [datetime(2021, 1, 1, 0, 0, 0),
-                          datetime(2021, 1, 1, 0, 0, 0),
-                          datetime(2021, 1, 1, 0, 0, 0)],
-            "data_value": [10, 20, 30]
-        })
-
-        df = get_co2_emissions_per_kwh(session, loc_id, datetime_start, datetime_end)
-
-        assert df.shape == (3, 1)
-        assert df.columns.tolist() == ["co2_per_mwh"]
-        assert df["co2_per_mwh"].tolist() == [10, 20, 30]
 
 
 def test_get_location():
