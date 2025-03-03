@@ -8,7 +8,7 @@ import joblib
 from pysolar.solar import *
 from sqlalchemy import Float
 from db.utils import get_gen_data, get_gen_ids_by_data_pro_id, get_location, get_sta_data, insert_or_update_predictions
-from db.db import session
+from sqlalchemy.orm import Session
 
 TARGET_COLUMN = 'Generated Power'
 
@@ -53,7 +53,8 @@ def load_model(path, prediction_capacity: Float) -> Model:
     return model
 
 
-def get_data(start_date: Optional[datetime.datetime],
+def get_data(db: Session,
+             start_date: Optional[datetime.datetime],
              end_date: Optional[datetime.datetime],
              cli_id: Optional[int] = None,
              loc_id: Optional[int] = None,
@@ -64,7 +65,7 @@ def get_data(start_date: Optional[datetime.datetime],
 
     gen_ids = None
     if data_pro_id:
-        cli_id, loc_id, gen_ids, start_date, end_date = get_gen_ids_by_data_pro_id(session, data_pro_id)
+        cli_id, loc_id, gen_ids, start_date, end_date = get_gen_ids_by_data_pro_id(db, data_pro_id)
         if cli_id is None:
             return pd.DataFrame(), None, None, None, None, None, None, None, None
         gen_id = gen_ids[0]
@@ -75,12 +76,12 @@ def get_data(start_date: Optional[datetime.datetime],
         end_date = datetime.datetime.fromtimestamp(end_date)
 
     start_date = start_date - datetime.timedelta(hours=2)
-    location = get_location(session, loc_id, cli_id)
+    location = get_location(db, loc_id, cli_id)
     capacity = location.loc_output_total_capacity
     latitude = location.loc_coord_lat
     longitude = location.loc_coord_lng
-    gen_df = get_gen_data(session, cli_id, gen_id, start_date, end_date)
-    sta_df = get_sta_data(session, cli_id, loc_id, start_date, end_date)
+    gen_df = get_gen_data(db, cli_id, gen_id, start_date, end_date)
+    sta_df = get_sta_data(db, cli_id, loc_id, start_date, end_date)
     model_df = pd.merge(gen_df, sta_df, left_index=True, right_index=True, how='outer')
     return model_df, cli_id, loc_id, gen_id, start_date, end_date, capacity, latitude, longitude
 
@@ -167,5 +168,5 @@ def add_calculated_features(df, latitude: Float, longitude: Float) -> pd.DataFra
     return df
 
 
-def save_predictions(cli_id: int, gen_id: int, predictions: List[Tuple[datetime.datetime, float, int]]):
-    insert_or_update_predictions(session, cli_id, gen_id, predictions)
+def save_predictions(db: Session, cli_id: int, gen_id: int, predictions: List[Tuple[datetime.datetime, float, int]]):
+    insert_or_update_predictions(db, cli_id, gen_id, predictions)

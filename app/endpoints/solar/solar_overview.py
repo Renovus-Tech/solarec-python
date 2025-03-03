@@ -1,11 +1,12 @@
 import json
 from datetime import datetime, timedelta
 from typing import List, Optional
-
+from sqlalchemy.orm import Session
+from db.db import get_db
 from db.utils import data_freq_to_pd_frequency
 from core.solar import Solar
 from dateutil.parser import parse
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -68,10 +69,10 @@ def parse_request(param_json) -> Request:
 
 
 @router.get("/", tags=["solar", "overview"], response_model=Response)
-def overview(param_json):
+def overview(param_json, db: Session = Depends(get_db)):
     request = parse_request(param_json)
-    solar = Solar(request.client, request.location, None, None, request.start_date, request.end_date, None, request.data_freq)
-    solar.fetch_aggregated_by_loc_and_period()
+    solar = Solar(db, request.client, request.location, None, None, request.start_date, request.end_date, None, request.data_freq)
+    solar.fetch_aggregated_by_loc_and_period(db)
 
     data = solar.data_aggregated_by_loc_and_period.iloc[0]
 

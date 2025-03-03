@@ -4,18 +4,18 @@ from fastapi import HTTPException
 import numpy as np
 import pandas as pd
 from db.utils import get_gen_codes_and_names, get_gen_datas_grouped, get_gen_ids_by_loc_id, get_period_end, get_sta_datas_grouped, get_sta_id_by_loc_id, get_loc_output_capacity, insert_cli_gen_alerts
-from db.db import session
+from sqlalchemy.orm import Session
 
 
 class Solar():
-    def __init__(self, cli_id: int, loc_id: int, gen_ids: List[int], sta_id: int,  datetime_start: datetime, datetime_end: datetime, freq: str, data_freq: Optional[str] = '15T'):
+    def __init__(self, db: Session, cli_id: int, loc_id: int, gen_ids: List[int], sta_id: int,  datetime_start: datetime, datetime_end: datetime, freq: str, data_freq: Optional[str] = '15T'):
         self.loc_id = loc_id
         self.gen_ids = gen_ids if gen_ids else [
-            int(x) for x in get_gen_ids_by_loc_id(session, loc_id)['gen_id_auto'].values]
+            int(x) for x in get_gen_ids_by_loc_id(db, loc_id)['gen_id_auto'].values]
         if sta_id:
             self.sta_id = sta_id
         else:
-            station = get_sta_id_by_loc_id(session, loc_id)
+            station = get_sta_id_by_loc_id(db, loc_id)
             if station.empty:
                 raise HTTPException(status_code=400, detail=f'No station found for location {loc_id}')
             self.sta_id = int(station['sta_id_auto'][0])
@@ -26,10 +26,10 @@ class Solar():
         self.freq = freq
         self.data_freq = data_freq
 
-        loc_total_capacity = get_loc_output_capacity(session, self.loc_id)
+        loc_total_capacity = get_loc_output_capacity(db, self.loc_id)
         self.loc_total_capacity = loc_total_capacity if loc_total_capacity else 1
         self.gen_codes_and_names = get_gen_codes_and_names(
-            session, self.gen_ids)
+            db, self.gen_ids)
         self.gen_codes = list(self.gen_codes_and_names['gen_code'].values)
         self.gen_names = list(self.gen_codes_and_names['gen_name'].values)
 
@@ -138,11 +138,11 @@ class Solar():
         self.data_aggregated_by_period['to'] = self.data_aggregated_by_period.apply(
             self._get_group_period_end_date, axis=1)
 
-    def fetch_data(self):
-        self.gen_data = get_gen_datas_grouped(session, self.cli_id, self.gen_ids, self.datetime_start, self.datetime_end, {
+    def fetch_data(self, db: Session):
+        self.gen_data = get_gen_datas_grouped(db, self.cli_id, self.gen_ids, self.datetime_start, self.datetime_end, {
                                               501: 'power', 502: 'ac_production', 508: 'ac_production_prediction'})
 
-        self.sta_data = get_sta_datas_grouped(session, self.cli_id, self.sta_id, self.datetime_start, self.datetime_end, {
+        self.sta_data = get_sta_datas_grouped(db, self.cli_id, self.sta_id, self.datetime_start, self.datetime_end, {
                                               503: 'avg_ambient_temp', 504: 'avg_module_temp', 505: 'irradiation'})
 
         self._adjust_gen_units()
@@ -162,9 +162,9 @@ class Solar():
         periods = len(rows)
         return (periods - rows.sum()) / (periods)
 
-    def fetch_aggregated_by_period(self):
+    def fetch_aggregated_by_period(self, db: Session):
         if self.data is None:
-            self.fetch_data()
+            self.fetch_data(db)
 
         agg = {'power': 'sum', 'ac_production': 'sum', 'avg_ambient_temp': 'mean', 'avg_module_temp': 'mean',
                'irradiation': 'sum', 'time_based_availability': self._get_agg_unavailable, 'from': 'first', 'count': 'sum', 'is_missing': 'sum',
@@ -182,9 +182,9 @@ class Solar():
 
         self._compute_agg_by_period_calculated_columns()
 
-    def fetch_aggregated_by_loc_and_period(self):
+    def fetch_aggregated_by_loc_and_period(self, db: Session):
         if self.data_aggregated_by_period is None:
-            self.fetch_aggregated_by_period()
+            self.fetch_aggregated_by_period(db)
 
         agg = {'power': 'sum', 'ac_production': 'sum', 'avg_ambient_temp': 'mean', 'avg_module_temp': 'mean',
                'irradiation': 'mean', 'from': 'first', 'time_based_availability': 'mean', 'performance_ratio': 'mean', 'specific_yield': 'sum',

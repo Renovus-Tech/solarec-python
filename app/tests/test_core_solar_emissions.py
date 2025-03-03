@@ -31,7 +31,7 @@ def test_calculate_co2_avoided(mock_get_client_settings, mock_get_co2_emissions_
         data_aggregated_by_loc_and_period.set_index("data_date", inplace=True)
         mock_solar_instance.data_aggregated_by_loc_and_period = data_aggregated_by_loc_and_period
 
-        df = calculate_co2_avoided(1, 1, datetime(2021, 1, 1, 0, 0), datetime(2021, 1, 1, 1, 0), "1H", "15T")
+        df = calculate_co2_avoided(None, 1, 1, datetime(2021, 1, 1, 0, 0), datetime(2021, 1, 1, 1, 0), "1H", "15T")
 
         assert df is not None
         assert df["co2_avoided"].sum() == 20

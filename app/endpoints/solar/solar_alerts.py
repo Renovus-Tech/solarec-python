@@ -1,10 +1,12 @@
 import json
 from datetime import timedelta, datetime
 from typing import List, Optional
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from dateutil.parser import parse
 from pydantic import BaseModel, Field
+from db.db import get_db
 from core.solar_alerts import calculate_alerts
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/solar/alerts",
@@ -58,8 +60,8 @@ def parse_request(param_json) -> Request:
 
 
 @router.get("/", tags=["solar", "overview"], response_model=Response)
-def process_alerts(param_json):
+def process_alerts(param_json, db: Session = Depends(get_db)):
     request = parse_request(param_json)
-    cli_id, loc_id, gen_ids, datetime_start, datetime_end, alert_count = calculate_alerts(
-        cli_id=request.client, loc_id=request.location, data_pro_id=request.data_pro_id, datetime_start=request.start_date, datetime_end=request.end_date)
+    cli_id, loc_id, gen_ids, datetime_start, datetime_end, alert_count = calculate_alerts(db,
+                                                                                          cli_id=request.client, loc_id=request.location, data_pro_id=request.data_pro_id, datetime_start=request.start_date, datetime_end=request.end_date)
     return Response(data=Data(**{"from": datetime_start.strftime('%Y-%m-%d %H:%M'), "to": datetime_end.strftime('%Y-%m-%d %H:%M'), "count": alert_count, "client": cli_id, "location": loc_id, "generators": gen_ids}))

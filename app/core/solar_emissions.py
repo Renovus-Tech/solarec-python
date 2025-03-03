@@ -1,19 +1,18 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
-
+from sqlalchemy.orm import Session
 import numpy as np
 import pandas as pd
 from core.solar import Solar
-from db.db import session
 from db.utils import get_client_settings, get_co2_emissions_tons_per_Mwh, get_group_period_end_date
 
 
-def calculate_co2_avoided(cli_id: int, loc_id: int, datetime_start: datetime, datetime_end: datetime, freq: str, data_freq: str) -> pd.DataFrame:
-    solar = Solar(cli_id, loc_id, None, None, datetime_start, datetime_end, freq, data_freq)
-    solar.fetch_aggregated_by_loc_and_period()
+def calculate_co2_avoided(db: Session, cli_id: int, loc_id: int, datetime_start: datetime, datetime_end: datetime, freq: str, data_freq: str) -> pd.DataFrame:
+    solar = Solar(db, cli_id, loc_id, None, None, datetime_start, datetime_end, freq, data_freq)
+    solar.fetch_aggregated_by_loc_and_period(db)
 
-    co2_per_mwh = get_co2_emissions_tons_per_Mwh(session, solar.loc_id, datetime_start)
-    client_settings = get_client_settings(session, cli_id)
+    co2_per_mwh = get_co2_emissions_tons_per_Mwh(db, solar.loc_id, datetime_start)
+    client_settings = get_client_settings(db, cli_id)
 
     cert_sold_pct = int(client_settings.loc['certSoldPorcentage']['cli_set_value']) / 100 if 'certSoldPorcentage' in client_settings.index else 0
     cert_price = int(client_settings.loc['certPrice']['cli_set_value']) if 'certPrice' in client_settings.index else 0

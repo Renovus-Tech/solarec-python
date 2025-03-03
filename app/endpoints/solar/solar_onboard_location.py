@@ -1,11 +1,12 @@
 import json
 from typing import Optional
+from db.db import get_db
 from db.utils import get_location, update_location
 from nlp.llm_client_factory import LLMClientFactory
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from nlp.onboarding_helper import NLPOnboardingHelper
 from pydantic import BaseModel
-from db.db import session
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/solar/location/onboard",
@@ -39,9 +40,9 @@ def parse_request(param_json) -> Request:
 
 
 @router.post("/", status_code=status.HTTP_200_OK, response_model=Response)
-def onboard_location(param_json):
+def onboard_location(param_json, db: Session = Depends(get_db)):
     request = parse_request(param_json)
-    location = get_location(session, request.location_id, request.client_id)
+    location = get_location(db, request.location_id, request.client_id)
     if not location:
         raise HTTPException(
             status_code=404, detail=f"No Location was found for the location ID: {request.location_id} and client ID: {request.client_id}")
@@ -50,7 +51,7 @@ def onboard_location(param_json):
     onboarding_helper = NLPOnboardingHelper(llm_client)
     response = onboarding_helper.get_onboarding_data(request.text)
 
-    update_location(location, response.address, response.capacity)
+    update_location(db, location, response.address, response.capacity)
 
     return Response(location_id=request.location_id,
                     client_id=request.client_id,

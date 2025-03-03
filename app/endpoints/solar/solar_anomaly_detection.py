@@ -2,10 +2,12 @@ import json
 from datetime import timedelta, datetime
 import os
 from typing import List, Optional
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from dateutil.parser import parse
 from pydantic import BaseModel, Field
+from db.db import get_db
 from ml.model import load_model, get_data, resample_data, save_predictions
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/solar/anomaly_detection",
@@ -68,10 +70,11 @@ def parse_request(param_json) -> Request:
 
 
 @router.get("/", tags=["solar", "anomaly_detection"], response_model=Response)
-def process_anomaly_detection(param_json):
+def process_anomaly_detection(param_json, db: Session = Depends(get_db)):
     request = parse_request(param_json)
 
-    df, cli_id, loc_id, gen_id, start_date, end_date, loc_capacity, loc_lat, loc_long = get_data(start_date=request.start_date,
+    df, cli_id, loc_id, gen_id, start_date, end_date, loc_capacity, loc_lat, loc_long = get_data(db,
+                                                                                                 start_date=request.start_date,
                                                                                                  end_date=request.end_date,
                                                                                                  cli_id=request.cli_id,
                                                                                                  loc_id=request.loc_id,
@@ -103,7 +106,7 @@ def process_anomaly_detection(param_json):
                                  "actual": actual_power})
             datas.append(data)
 
-    save_predictions(cli_id, gen_id, predictions)
+    save_predictions(db, cli_id, gen_id, predictions)
 
     datas.sort(key=lambda x: x.dataDate)
     chart = Chart(**{"from": start_date.strftime("%Y/%m/%d %H:%M:%S"),

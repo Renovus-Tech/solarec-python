@@ -6,7 +6,7 @@ from fastapi import HTTPException
 import numpy as np
 from core.solar import Solar
 from db.utils import get_client_settings, get_gen_ids_by_data_pro_id, insert_cli_gen_alerts
-from db.db import session
+from sqlalchemy.orm import Session
 
 ALERT_DATA_TYPE = 1
 ALERT_1_DEFAULT_THRESHOLD = 90
@@ -16,13 +16,13 @@ ALERT_4_DEFAULT_THRESHOLD = 90
 MAX_DATA_PER_DAY = 24 * 60 / 15
 
 
-def calculate_alerts(datetime_start: Optional[datetime], datetime_end: Optional[datetime], data_pro_id: Optional[int] = None, cli_id: Optional[int] = None, loc_id: Optional[int] = None) -> Tuple[int, int, List[int], datetime, datetime, int]:
+def calculate_alerts(db: Session, datetime_start: Optional[datetime], datetime_end: Optional[datetime], data_pro_id: Optional[int] = None, cli_id: Optional[int] = None, loc_id: Optional[int] = None) -> Tuple[int, int, List[int], datetime, datetime, int]:
 
     if not data_pro_id and not (cli_id and loc_id and datetime_start and datetime_end):
         raise HTTPException(status_code=400, detail='Invalid parameters: either data_pro_id or cli_id, loc_id, datetime_start and datetime_end must be provided')
     gen_ids = None
     if data_pro_id:
-        cli_id, loc_id, gen_ids, datetime_start, datetime_end = get_gen_ids_by_data_pro_id(session, data_pro_id)
+        cli_id, loc_id, gen_ids, datetime_start, datetime_end = get_gen_ids_by_data_pro_id(db, data_pro_id)
 
     if cli_id is None or loc_id is None:
         raise HTTPException(status_code=400, detail='data_pro_id not found')
@@ -31,7 +31,7 @@ def calculate_alerts(datetime_start: Optional[datetime], datetime_end: Optional[
     solar.fetch_aggregated_by_period()
     data = solar.data_aggregated_by_period
 
-    cli_settings = get_client_settings(session, cli_id)
+    cli_settings = get_client_settings(db, cli_id)
     alert_1_threshold = 100 - (int(cli_settings.loc['alertDataAvailabilityLowerThan']['cli_set_value'])
                                if 'alertDataAvailabilityLowerThan' in cli_settings.index and cli_settings.loc['alertDataAvailabilityLowerThan']['cli_set_value'] else ALERT_1_DEFAULT_THRESHOLD)
     alert_2_threshold = 100 - (int(cli_settings.loc['alertPerformanceRatioLowerThan']['cli_set_value'])
@@ -102,6 +102,6 @@ def calculate_alerts(datetime_start: Optional[datetime], datetime_end: Optional[
             rows_to_insert.append({"cli_id": cli_id, "gen_id": gen_id, "cli_gen_alert_added": now, "cli_gen_alert_type": ALERT_DATA_TYPE,
                                   "cli_gen_alert_data": json.dumps(alert_data), "cli_gen_alert_trigger": date})
 
-    insert_cli_gen_alerts(session, cli_id,  solar.gen_ids, datetime_start, datetime_end, rows_to_insert)
+    insert_cli_gen_alerts(db, cli_id,  solar.gen_ids, datetime_start, datetime_end, rows_to_insert)
 
     return cli_id, loc_id, solar.gen_ids, datetime_start, datetime_end, len(rows_to_insert)

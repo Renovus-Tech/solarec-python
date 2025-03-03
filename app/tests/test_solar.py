@@ -29,7 +29,7 @@ def test_solar_initialize(mock_get_gen_codes_and_names, mock_get_loc_output_capa
         "gen_rate_power": [1000, 2000, 3000]
     })
 
-    solar = Solar(1, 1, None, None, datetime(2021, 1, 1), datetime(2021, 1, 2), "1H")
+    solar = Solar(None, 1, 1, None, None, datetime(2021, 1, 1), datetime(2021, 1, 2), "1H")
 
     assert solar.loc_id == 1
     assert solar.gen_ids == [1, 2, 3]
@@ -100,8 +100,8 @@ def test_solar_fetch_data(mock_get_sta_datas_grouped, mock_get_gen_datas_grouped
     sta_datas_return_value.set_index(["data_date", "sta_id"], inplace=True)
     mock_get_sta_datas_grouped.return_value = sta_datas_return_value
 
-    solar = Solar(1, 1, None, None, datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 0, 45, 0), "1H")
-    solar.fetch_data()
+    solar = Solar(None, 1, 1, None, None, datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 0, 45, 0), "1H")
+    solar.fetch_data(None)
 
     assert solar.data is not None
     assert solar.gen_data is not None
@@ -218,8 +218,8 @@ def test_solar_fetch_aggregated_by_period(mock_get_sta_datas_grouped, mock_get_g
     sta_datas_return_value.set_index(["data_date", "sta_id"], inplace=True)
     mock_get_sta_datas_grouped.return_value = sta_datas_return_value
 
-    solar = Solar(1, 1, None, None, datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 2, 0, 0), "1H")
-    solar.fetch_aggregated_by_period()
+    solar = Solar(None, 1, 1, None, None, datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 2, 0, 0), "1H")
+    solar.fetch_aggregated_by_period(None)
 
     assert solar.data_aggregated_by_period is not None
     assert (1, pd.Timestamp('2021-01-01 00:00:00')) in solar.data_aggregated_by_period.index
@@ -328,9 +328,9 @@ def test_solar_fetch_aggregated_by_loc_and_period(mock_get_sta_datas_grouped, mo
     })
     sta_datas_return_value.set_index(["data_date", "sta_id"], inplace=True)
     mock_get_sta_datas_grouped.return_value = sta_datas_return_value
-
-    solar = Solar(1, 1, None, None, datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 2, 0, 0), "1H")
-    solar.fetch_aggregated_by_loc_and_period()
+    db = None
+    solar = Solar(db, 1, 1, None, None, datetime(2021, 1, 1, 0, 0, 0), datetime(2021, 1, 1, 2, 0, 0), "1H")
+    solar.fetch_aggregated_by_loc_and_period(db)
 
     assert solar.data_aggregated_by_loc_and_period is not None
     assert pd.Timestamp('2021-01-01 00:00:00') in solar.data_aggregated_by_loc_and_period.index

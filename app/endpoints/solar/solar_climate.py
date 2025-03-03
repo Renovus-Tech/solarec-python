@@ -1,11 +1,13 @@
 import json
 from datetime import timedelta, datetime
 from typing import List, Optional
+from db.db import get_db
 from db.utils import group_by_to_pd_frequency, data_freq_to_pd_frequency, pandas_frequency_to_timedelta
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from dateutil.parser import parse
 from pydantic import BaseModel, Field
 from core.solar import Solar
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/solar/climate",
@@ -87,7 +89,7 @@ def parse_request(param_json) -> Request:
 
 
 @router.get("/", tags=["solar", "climate"], response_model=Response)
-def climate(param_json):
+def climate(param_json, db: Session = Depends(get_db)):
     request = parse_request(param_json)
 
     if request.freq is not None:
@@ -96,12 +98,12 @@ def climate(param_json):
         if freq_timedelta < data_freq_timedelta:
             raise HTTPException(status_code=400, detail=f'Invalid group_by {request.group_by} for frequence {request.data_freq}')
 
-    solar = Solar(request.client, request.location, None, None, request.start_date, request.end_date, request.freq, request.data_freq)
+    solar = Solar(db, request.client, request.location, None, None, request.start_date, request.end_date, request.freq, request.data_freq)
     for gen_id in request.generators:
         if gen_id not in solar.gen_ids:
             raise HTTPException(status_code=400, detail=f'Generator {gen_id} not found in location {request.location}')
 
-    solar.fetch_aggregated_by_loc_and_period()
+    solar.fetch_aggregated_by_loc_and_period(db)
 
     chart = Chart(**{"from": request.start_date.strftime("%Y/%m/%d %H:%M:%S"),
                      "to": request.end_date.strftime("%Y/%m/%d %H:%M:%S"),

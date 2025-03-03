@@ -1,8 +1,10 @@
 import os
 from configparser import ConfigParser
+from contextvars import ContextVar
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
+from sqlalchemy.orm import (Session, declarative_base, scoped_session,
+                            sessionmaker)
 
 session = None
 
@@ -11,30 +13,29 @@ def get_DATABASE_URI(filename="database.ini", section="postgresql"):
     parser = ConfigParser()
     parser.read(filename)
 
-    db = {}
-    if parser.has_section(section):
-        params = parser.items(section)
-        for param in params:
-            db[param[0]] = param[1]
-    else:
-        raise Exception("Section {0} not found in the {1} file".format(section, filename))
+    if not parser.has_section(section):
+        raise Exception(f"Section {section} not found in the {filename} file")
 
-    DATABASE_URI = "postgresql://{user}:{password}@{server}/{db}".format(
-        user=db["user"],
-        password=db["password"],
-        server=db["host"],
-        db=db["database"],
-    )
+    db = {param[0]: param[1] for param in parser.items(section)}
 
-    return DATABASE_URI
+    return f"postgresql://{db['user']}:{db['password']}@{db['host']}/{db['database']}"
 
 
 Base = declarative_base()
+SessionLocal = None
+
 if os.path.isfile("database.ini"):
-    DATABASE_URI = get_DATABASE_URI(filename="database.ini", section="postgresql")
+    DATABASE_URI = get_DATABASE_URI()
     engine = create_engine(DATABASE_URI, pool_pre_ping=True, pool_size=10, max_overflow=30)
-
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
-    session = Session()
+
+def get_db():
+    if SessionLocal is None:
+        raise RuntimeError("Database is not initialized")
+
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

@@ -1,11 +1,13 @@
 import json
 from datetime import timedelta, datetime
 from typing import List, Optional
+from db.db import get_db
 from core.solar_emissions import calculate_co2_avoided
 from db.utils import data_freq_to_pd_frequency, group_by_to_pd_frequency, pandas_frequency_to_timedelta
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from dateutil.parser import parse
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/solar/emissions",
@@ -70,7 +72,7 @@ def parse_request(param_json) -> Request:
 
 
 @router.get("/", tags=["solar", "emissions"], response_model=Response)
-def emissions(param_json):
+def emissions(param_json, db: Session = Depends(get_db)):
     request = parse_request(param_json)
 
     if request.freq is not None:
@@ -79,7 +81,7 @@ def emissions(param_json):
         if freq_timedelta < data_freq_timedelta:
             raise HTTPException(status_code=400, detail=f'Invalid group_by {request.group_by} for frequence {request.data_freq}')
 
-    data = calculate_co2_avoided(request.client, request.location, request.start_date, request.end_date, request.freq, request.data_freq)
+    data = calculate_co2_avoided(db, request.client, request.location, request.start_date, request.end_date, request.freq, request.data_freq)
     chart = Chart(**{"from": request.start_date.strftime("%Y/%m/%d %H:%M:%S"),
                      "to": request.end_date.strftime("%Y/%m/%d %H:%M:%S"),
                      "resultCode": 200,

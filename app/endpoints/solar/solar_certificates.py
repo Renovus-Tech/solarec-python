@@ -1,11 +1,13 @@
 import json
 from datetime import timedelta, datetime
 from typing import List, Optional
+from db.db import get_db
 from core.solar_emissions import calculate_co2_avoided
 from db.utils import data_freq_to_pd_frequency, group_by_to_pd_frequency, pandas_frequency_to_timedelta
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from dateutil.parser import parse
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/solar/certificates",
@@ -68,10 +70,10 @@ def parse_request(param_json) -> Request:
                    data_freq=data_freq)
 
 
-@ router.get("/", tags=["solar", "certificates"], response_model=Response)
-def certificates(param_json):
+@router.get("/", tags=["solar", "certificates"], response_model=Response)
+def certificates(param_json, db: Session = Depends(get_db)):
     request = parse_request(param_json)
-    data = calculate_co2_avoided(request.client, request.location, request.start_date, request.end_date, request.freq, request.data_freq)
+    data = calculate_co2_avoided(db, request.client, request.location, request.start_date, request.end_date, request.freq, request.data_freq)
     chart = Chart(**{"from": request.start_date.strftime("%Y/%m/%d %H:%M:%S"),
                      "to": request.end_date.strftime("%Y/%m/%d %H:%M:%S"),
                      "resultCode": 200,

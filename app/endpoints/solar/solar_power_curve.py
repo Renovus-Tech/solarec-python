@@ -4,11 +4,13 @@ from typing import List, Optional
 
 import numpy as np
 import pandas as pd
+from db.db import get_db
 from db.utils import data_freq_to_pd_frequency, get_period_end
 from core.solar import Solar
 from dateutil.parser import parse
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/solar/power_curve",
@@ -93,11 +95,11 @@ def _adjust_units(row, data_freq, datetime_end):
 
 
 @router.get("/", tags=["solar", "power_curve"], response_model=Response)
-def power_curve(param_json):
+def power_curve(param_json, db: Session = Depends(get_db)):
     request = parse_request(param_json)
-    solar = Solar(request.client, request.location, request.generators, None, request.start_date, request.end_date, "100Y", request.data_freq)
+    solar = Solar(db, request.client, request.location, request.generators, None, request.start_date, request.end_date, "100Y", request.data_freq)
 
-    solar.fetch_data()
+    solar.fetch_data(db)
     power_curve = solar.data[['ac_production', 'irradiation']]
 
     power_curve["ac_production"] = power_curve[["ac_production"]].apply(lambda x: _adjust_units(x, request.data_freq, request.end_date), axis=1)

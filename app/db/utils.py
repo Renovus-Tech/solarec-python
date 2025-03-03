@@ -127,20 +127,20 @@ def remove_microseconds(row):
         return row.replace(microsecond=0)
 
 
-def get_gen_datas_grouped(session, cli_id: int, gen_ids: list, datetime_start, datetime_end, data_type_names: Dict[int, str]) -> pd.DataFrame:
+def get_gen_datas_grouped(db: Session, cli_id: int, gen_ids: list, datetime_start, datetime_end, data_type_names: Dict[int, str]) -> pd.DataFrame:
     """
     Get generator data for multiple data types and multiple generators.
     """
     t0 = time.time()
     df = pd.read_sql(
-        session.query(GenData.gen_id, GenData.data_date,
-                      GenData.data_value, GenData.data_type_id)
+        db.query(GenData.gen_id, GenData.data_date,
+                 GenData.data_value, GenData.data_type_id)
         .filter(GenData.gen_id.in_(gen_ids))
         .filter(GenData.data_type_id.in_(data_type_names.keys()))
         .filter(GenData.data_date < datetime_end)
         .filter(GenData.data_date >= datetime_start)
         .statement,
-        session.bind)
+        db.bind)
 
     df["data_date"] = df["data_date"].apply(
         lambda row: remove_microseconds(row))
@@ -158,13 +158,13 @@ def get_gen_datas_grouped(session, cli_id: int, gen_ids: list, datetime_start, d
     return df
 
 
-def get_sta_datas_grouped(session, cli_id: int, sta_id: int, datetime_start, datetime_end, data_type_names: Dict[int, str]) -> pd.DataFrame:
+def get_sta_datas_grouped(db: Session, cli_id: int, sta_id: int, datetime_start, datetime_end, data_type_names: Dict[int, str]) -> pd.DataFrame:
     """
     Get data for multiple data types grouped by date_time.
     """
     t0 = time.time()
     df = pd.read_sql(
-        session.query(
+        db.query(
             StaData.sta_id, StaData.data_date, StaData.data_value, StaData.data_type_id
         )
         .filter(StaData.cli_id == cli_id)
@@ -173,7 +173,7 @@ def get_sta_datas_grouped(session, cli_id: int, sta_id: int, datetime_start, dat
         .filter(StaData.data_date < datetime_end)
         .filter(StaData.data_date >= datetime_start)
         .statement,
-        session.bind)
+        db.bind)
     df["data_date"] = df["data_date"].apply(
         lambda row: remove_microseconds(row))
     if not df.empty:
@@ -194,7 +194,7 @@ def get_sta_datas_grouped(session, cli_id: int, sta_id: int, datetime_start, dat
 
 
 def get_gen_datas(
-    session,
+    db: Session,
     gen_ids: list,
     data_type_ids: int,
     datetime_start,
@@ -208,7 +208,7 @@ def get_gen_datas(
     """
     t0 = time.time()
     df = pd.read_sql(
-        session.query(
+        db.query(
             GenData.gen_id, GenData.data_date, GenData.data_value, GenData.data_type_id
         )
         .filter(GenData.gen_id.in_(gen_ids))
@@ -216,7 +216,7 @@ def get_gen_datas(
         .filter(GenData.data_date < datetime_end)
         .filter(GenData.data_date >= datetime_start)
         .statement,
-        session.bind,
+        db.bind,
     ).rename(columns={"data_value": data_name})
     df["data_date"] = df["data_date"].apply(
         lambda row: remove_microseconds(row))
@@ -228,7 +228,7 @@ def get_gen_datas(
 
 
 def get_sta_datas(
-    session,
+    db: Session,
     sta_ids: list,
     data_type_ids: list,
     datetime_start,
@@ -240,7 +240,7 @@ def get_sta_datas(
     """
     t0 = time.time()
     df = pd.read_sql(
-        session.query(
+        db.query(
             StaData.sta_id, StaData.data_date, StaData.data_value, StaData.data_type_id
         )
         .filter(StaData.sta_id.in_(sta_ids))
@@ -248,7 +248,7 @@ def get_sta_datas(
         .filter(StaData.data_date < datetime_end)
         .filter(StaData.data_date >= datetime_start)
         .statement,
-        session.bind,
+        db.bind,
     ).rename(columns={"data_value": data_name})
     df["data_date"] = df["data_date"].apply(
         lambda row: remove_microseconds(row))
@@ -259,51 +259,51 @@ def get_sta_datas(
     return df
 
 
-def get_gen_ids_by_loc_id(session, loc_id: int):
-    df = pd.read_sql(session.query(Generator.gen_id_auto)
+def get_gen_ids_by_loc_id(db: Session, loc_id: int):
+    df = pd.read_sql(db.query(Generator.gen_id_auto)
                      .filter(Generator.loc_id == loc_id)
                      .statement,
-                     session.bind)
+                     db.bind)
     return df
 
 
-def get_sta_id_by_loc_id(session, loc_id: int):
-    df = pd.read_sql(session.query(Station.sta_id_auto)
+def get_sta_id_by_loc_id(db: Session, loc_id: int):
+    df = pd.read_sql(db.query(Station.sta_id_auto)
                      .filter(Station.loc_id == loc_id)
                      .statement,
-                     session.bind)
+                     db.bind)
     return df
 
 
-def get_gen_codes_and_names(session, gen_ids: List[int]):
+def get_gen_codes_and_names(db: Session, gen_ids: List[int]):
     df = pd.read_sql(
-        session.query(Generator.gen_id_auto, Generator.gen_code,
-                      Generator.gen_name, Generator.gen_rate_power)
+        db.query(Generator.gen_id_auto, Generator.gen_code,
+                 Generator.gen_name, Generator.gen_rate_power)
         .filter(Generator.gen_id_auto.in_(gen_ids))
-        .statement, session.bind)
+        .statement, db.bind)
     return df.set_index(df['gen_id_auto']).drop('gen_id_auto', axis=1)
 
 
-def get_loc_output_capacity(session, locId: int):
+def get_loc_output_capacity(db: Session, locId: int):
     return (
-        session.query(Location.loc_output_capacity)
+        db.query(Location.loc_output_capacity)
         .filter(Location.loc_id_auto == locId)
         .first()[0]
     )
 
 
-def get_client_settings(session, cli_id: int):
+def get_client_settings(db: Session, cli_id: int):
     df = pd.read_sql(
-        session.query(CliSetting.cli_set_name, CliSetting.cli_set_value)
+        db.query(CliSetting.cli_set_name, CliSetting.cli_set_value)
         .filter(CliSetting.cli_id == cli_id)
-        .statement, session.bind
+        .statement, db.bind
     )
     return df.set_index('cli_set_name', drop=True)
 
 
-def insert_cli_gen_alerts(session, cli_id: int, gen_ids: List[int], datetime_start: datetime.datetime, datetime_end: datetime.datetime, rows_to_insert: List[Dict]) -> int:
+def insert_cli_gen_alerts(db: Session, cli_id: int, gen_ids: List[int], datetime_start: datetime.datetime, datetime_end: datetime.datetime, rows_to_insert: List[Dict]) -> int:
 
-    session.query(CliGenAlert).filter(
+    db.query(CliGenAlert).filter(
         CliGenAlert.cli_id == cli_id,
         CliGenAlert.gen_id.in_(gen_ids),
         CliGenAlert.cli_gen_alert_trigger >= datetime_start,
@@ -312,18 +312,18 @@ def insert_cli_gen_alerts(session, cli_id: int, gen_ids: List[int], datetime_sta
 
     if len(rows_to_insert) > 0:
         statement = pq.insert(CliGenAlert).values(rows_to_insert)
-        session.execute(statement)
-        session.commit()
+        db.execute(statement)
+        db.commit()
 
     return len(rows_to_insert)
 
 
-def get_gen_ids_by_data_pro_id(session, data_pro_id: int) -> Tuple[int, int, List[int], datetime.datetime, datetime.datetime]:
+def get_gen_ids_by_data_pro_id(db: Session, data_pro_id: int) -> Tuple[int, int, List[int], datetime.datetime, datetime.datetime]:
 
-    df = pd.read_sql(session.query(GenData.gen_id, Generator.loc_id, Generator.cli_id, GenData.data_date)
+    df = pd.read_sql(db.query(GenData.gen_id, Generator.loc_id, Generator.cli_id, GenData.data_date)
                      .join(Generator, Generator.gen_id_auto == GenData.gen_id)
                      .filter(GenData.data_pro_id == data_pro_id)
-                     .statement, session.bind)
+                     .statement, db.bind)
 
     if (df.empty):
         return None, None, None, None, None
@@ -339,12 +339,12 @@ def get_gen_ids_by_data_pro_id(session, data_pro_id: int) -> Tuple[int, int, Lis
     return cli_id[0], loc_id[0], gen_ids, min_date, max_date
 
 
-def get_co2_emissions_tons_per_Mwh(session: Session, loc_id: int, datetime_start: datetime.datetime) -> float:
+def get_co2_emissions_tons_per_Mwh(db: Session, loc_id: int, datetime_start: datetime.datetime) -> float:
     year = datetime_start.year
     years_to_check = [year - 1, year - 2, year - 3]
 
     query = (
-        session.query(
+        db.query(
             extract('year', CtrData.data_date).label("year"),
             func.avg(CtrData.data_value).label("avg_co2")
         )
@@ -355,7 +355,7 @@ def get_co2_emissions_tons_per_Mwh(session: Session, loc_id: int, datetime_start
         .group_by(extract('year', CtrData.data_date))
     )
 
-    results = session.execute(query).fetchall()
+    results = db.execute(query).fetchall()
 
     if not results:
         return 0.0
@@ -365,27 +365,27 @@ def get_co2_emissions_tons_per_Mwh(session: Session, loc_id: int, datetime_start
     return average / 1000  # Convert from g/kWh to t/MWh
 
 
-def get_location(session, loc_id: int, cli_id: int) -> Location:
-    return session.query(Location).filter(Location.loc_id_auto == loc_id and
-                                          Location.cli_id == cli_id).first()
+def get_location(db: Session, loc_id: int, cli_id: int) -> Location:
+    return db.query(Location).filter(Location.loc_id_auto == loc_id and
+                                     Location.cli_id == cli_id).first()
 
 
-def update_location(session, location: Location, address: Optional[str], capacity: Optional[int]):
+def update_location(db: Session, location: Location, address: Optional[str], capacity: Optional[int]):
     if address:
         location.loc_address = address
     if capacity:
         location.loc_output_total_capacity = capacity
-    session.commit()
+    db.commit()
 
 
-def get_gen_data(session, cli_id, gen_id, start_date, end_date) -> pd.DataFrame:
-    df = pd.read_sql(session.query(GenData.data_date, GenData.data_value, GenData.data_pro_id)
+def get_gen_data(db: Session, cli_id, gen_id, start_date, end_date) -> pd.DataFrame:
+    df = pd.read_sql(db.query(GenData.data_date, GenData.data_value, GenData.data_pro_id)
                      .filter(GenData.cli_id == cli_id,
                              GenData.gen_id == gen_id,
                              GenData.data_date >= start_date,
                              GenData.data_date < end_date,
                              GenData.data_type_id == 502)
-                     .statement, session.bind)
+                     .statement, db.bind)
     df.columns = ['data_date', 'Generated Power', 'data_pro_id']
     df["data_date"] = df["data_date"].apply(
         lambda row: remove_microseconds(row))
@@ -393,15 +393,15 @@ def get_gen_data(session, cli_id, gen_id, start_date, end_date) -> pd.DataFrame:
     return df
 
 
-def get_sta_data(session, cli_id, loc_id, start_date, end_date) -> pd.DataFrame:
-    sta_id = session.query(Station.sta_id_auto).filter(Station.cli_id == cli_id, Station.loc_id == loc_id).first()[0]
-    df = pd.read_sql(session.query(StaData.data_date, StaData.data_type_id, StaData.data_value)
+def get_sta_data(db: Session, cli_id, loc_id, start_date, end_date) -> pd.DataFrame:
+    sta_id = db.query(Station.sta_id_auto).filter(Station.cli_id == cli_id, Station.loc_id == loc_id).first()[0]
+    df = pd.read_sql(db.query(StaData.data_date, StaData.data_type_id, StaData.data_value)
                      .filter(StaData.cli_id == cli_id,
                              StaData.sta_id == sta_id,
                              StaData.data_date >= start_date,
                              StaData.data_date < end_date,
                              StaData.data_type_id.in_([503, 505, 506, 507]))
-                     .statement, session.bind)
+                     .statement, db.bind)
     df["data_date"] = df["data_date"].apply(
         lambda row: remove_microseconds(row))
 
@@ -412,7 +412,7 @@ def get_sta_data(session, cli_id, loc_id, start_date, end_date) -> pd.DataFrame:
     return df
 
 
-def insert_or_update_predictions(session, cli_id: int, gen_id: int, predictions: List[Tuple[datetime.datetime, float, int]]):
+def insert_or_update_predictions(db: Session, cli_id: int, gen_id: int, predictions: List[Tuple[datetime.datetime, float, int]]):
     rows_to_insert = []
     for prediction in predictions:
         rows_to_insert.append({
@@ -436,5 +436,5 @@ def insert_or_update_predictions(session, cli_id: int, gen_id: int, predictions:
         }
     )
 
-    session.execute(update_stmt)
-    session.commit()
+    db.execute(update_stmt)
+    db.commit()
