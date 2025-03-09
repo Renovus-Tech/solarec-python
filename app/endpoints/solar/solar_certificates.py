@@ -80,6 +80,9 @@ def certificates(param_json, db: Session = Depends(get_db)):
                      "resultText": '',
                      "groupBy": request.group_by})
     datas = []
+    if data is None:
+        return Response(chart=chart, data=datas)
+
     for _, row in data.iterrows():
         datas.append(Data(**{"from": row['from'].strftime("%Y/%m/%d %H:%M:%S"),
                              "to": row['to'].strftime("%Y/%m/%d %H:%M:%S"),

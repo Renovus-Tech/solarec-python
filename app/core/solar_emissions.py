@@ -11,6 +11,9 @@ def calculate_co2_avoided(db: Session, cli_id: int, loc_id: int, datetime_start:
     solar = Solar(db, cli_id, loc_id, None, None, datetime_start, datetime_end, freq, data_freq)
     solar.fetch_aggregated_by_loc_and_period(db)
 
+    if solar.data is None:
+        return None
+
     co2_per_mwh = get_co2_emissions_tons_per_Mwh(db, solar.loc_id, datetime_start)
     client_settings = get_client_settings(db, cli_id)
 

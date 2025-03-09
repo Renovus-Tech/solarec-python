@@ -110,6 +110,10 @@ def performance(param_json, db: Session = Depends(get_db)):
                      "groupBy": request.group_by})
 
     datas = []
+
+    if solar.data is None:
+        return Response(chart=chart, data=datas)
+
     for date, row in solar.data_aggregated_by_loc_and_period.iterrows():
         gen_datas = []
         for gen_id in request.generators:

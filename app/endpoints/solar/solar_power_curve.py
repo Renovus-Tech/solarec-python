@@ -100,6 +100,13 @@ def power_curve(param_json, db: Session = Depends(get_db)):
     solar = Solar(db, request.client, request.location, request.generators, None, request.start_date, request.end_date, "100Y", request.data_freq)
 
     solar.fetch_data(db)
+
+    if solar.data is None:
+        return Response(chart=Chart(**{"from": str(request.start_date),
+                                       "to": str(request.end_date),
+                                       "resultCode": 200,
+                                       "resultText": ''}), generator=[])
+
     power_curve = solar.data[['ac_production', 'irradiation']]
 
     power_curve["ac_production"] = power_curve[["ac_production"]].apply(lambda x: _adjust_units(x, request.data_freq, request.end_date), axis=1)

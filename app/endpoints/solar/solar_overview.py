@@ -74,13 +74,20 @@ def overview(param_json, db: Session = Depends(get_db)):
     solar = Solar(db, request.client, request.location, None, None, request.start_date, request.end_date, None, request.data_freq)
     solar.fetch_aggregated_by_loc_and_period(db)
 
+    if solar.data is None:
+
+        chart = Chart(**{"from": request.start_date.strftime("%Y/%m/%d %H:%M:%S"),
+                         "to": request.end_date.strftime("%Y/%m/%d %H:%M:%S"),
+                         "resultCode": 200,
+                         "resultText": ''})
+        return Response(chart=chart, data=[])
+
     data = solar.data_aggregated_by_loc_and_period.iloc[0]
 
     chart = Chart(**{"from": data['from'].strftime("%Y/%m/%d %H:%M:%S"),
                      "to": data['to'].strftime("%Y/%m/%d %H:%M:%S"),
                      "resultCode": 200,
                      "resultText": ''})
-
     ac_production = round(data['ac_production'], 3)
     data = Data(productionMwh=ac_production,
                 irradiationKwhM2=round(data['irradiation'], 1),

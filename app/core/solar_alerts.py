@@ -29,6 +29,10 @@ def calculate_alerts(db: Session, datetime_start: Optional[datetime], datetime_e
 
     solar = Solar(cli_id=cli_id, loc_id=loc_id, datetime_start=datetime_start, datetime_end=datetime_end, freq='1D', gen_ids=gen_ids, sta_id=None)
     solar.fetch_aggregated_by_period()
+
+    if solar.data is None or solar.data.empty:
+        return HTTPException(status_code=404, detail='No data found')
+
     data = solar.data_aggregated_by_period
 
     cli_settings = get_client_settings(db, cli_id)

@@ -43,9 +43,17 @@ class Solar():
     def _fill_missing_gen_data(self):
 
         date_range = pd.date_range(start=self.datetime_start, end=self.datetime_end, freq=self.data_freq)
+        if date_range.empty:
+            return
         all_time = pd.DataFrame({'data_date': date_range})
+        if all_time.empty:
+            return
         all_gens = pd.DataFrame({'gen_id': self.gen_ids})
+        if all_gens.empty:
+            return
         all_time = pd.merge(all_time, all_gens, how='cross')
+        if all_time.empty:
+            return
         self.gen_data = pd.merge(all_time, self.gen_data, left_on=[
                                  'data_date', 'gen_id'], right_on=['data_date', 'gen_id'], how='left')
         self.gen_data.set_index(
@@ -57,9 +65,17 @@ class Solar():
 
     def _fill_missing_sta_data(self):
         date_range = pd.date_range(start=self.datetime_start, end=self.datetime_end, freq=self.data_freq)
+        if date_range.empty:
+            return
         all_time = pd.DataFrame({'data_date': date_range})
+        if all_time.empty:
+            return
         all_gens = pd.DataFrame({'sta_id': [self.sta_id]})
+        if all_gens.empty:
+            return
         all_time = pd.merge(all_time, all_gens, how='cross')
+        if all_time.empty:
+            return
         self.sta_data = pd.merge(all_time, self.sta_data, left_on=[
                                  'data_date', 'sta_id'], right_on=['data_date', 'sta_id'], how='left')
         self.sta_data.set_index(
@@ -150,6 +166,9 @@ class Solar():
         self._fill_missing_gen_data()
         self._fill_missing_sta_data()
 
+        if self.gen_data.empty or self.sta_data.empty:
+            return
+
         self._merge_gen_and_sta_data()
         self._compute_calculated_columns()
 
@@ -165,6 +184,9 @@ class Solar():
     def fetch_aggregated_by_period(self, db: Session):
         if self.data is None:
             self.fetch_data(db)
+
+        if self.data is None:
+            return
 
         agg = {'power': 'sum', 'ac_production': 'sum', 'avg_ambient_temp': 'mean', 'avg_module_temp': 'mean',
                'irradiation': 'sum', 'time_based_availability': self._get_agg_unavailable, 'from': 'first', 'count': 'sum', 'is_missing': 'sum',
@@ -185,6 +207,9 @@ class Solar():
     def fetch_aggregated_by_loc_and_period(self, db: Session):
         if self.data_aggregated_by_period is None:
             self.fetch_aggregated_by_period(db)
+
+        if self.data is None:
+            return
 
         agg = {'power': 'sum', 'ac_production': 'sum', 'avg_ambient_temp': 'mean', 'avg_module_temp': 'mean',
                'irradiation': 'mean', 'from': 'first', 'time_based_availability': 'mean', 'performance_ratio': 'mean', 'specific_yield': 'sum',
