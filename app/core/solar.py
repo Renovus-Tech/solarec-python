@@ -155,10 +155,10 @@ class Solar():
             self._get_group_period_end_date, axis=1)
 
     def fetch_data(self, db: Session):
-        self.gen_data = get_gen_datas_grouped(db, self.cli_id, self.gen_ids, self.datetime_start, self.datetime_end, {
+        self.gen_data = get_gen_datas_grouped(db, self.cli_id, self.gen_ids, self.datetime_start, self.datetime_end, self.data_freq, {
                                               501: 'power', 502: 'ac_production', 508: 'ac_production_prediction'})
 
-        self.sta_data = get_sta_datas_grouped(db, self.cli_id, self.sta_id, self.datetime_start, self.datetime_end, {
+        self.sta_data = get_sta_datas_grouped(db, self.cli_id, self.sta_id, self.datetime_start, self.datetime_end, self.data_freq, {
                                               503: 'avg_ambient_temp', 504: 'avg_module_temp', 505: 'irradiation'})
 
         self._adjust_gen_units()

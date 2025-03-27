@@ -127,7 +127,13 @@ def remove_microseconds(row):
         return row.replace(microsecond=0)
 
 
-def get_gen_datas_grouped(db: Session, cli_id: int, gen_ids: list, datetime_start, datetime_end, data_type_names: Dict[int, str]) -> pd.DataFrame:
+def adjust_data_date_by_freq(row, freq):
+    if freq in ['1MS', '1Y']:
+        return row.replace(hour=0, minute=0, second=0, microsecond=0)
+    return row
+
+
+def get_gen_datas_grouped(db: Session, cli_id: int, gen_ids: list, datetime_start, datetime_end, freq: str, data_type_names: Dict[int, str]) -> pd.DataFrame:
     """
     Get generator data for multiple data types and multiple generators.
     """
@@ -142,11 +148,14 @@ def get_gen_datas_grouped(db: Session, cli_id: int, gen_ids: list, datetime_star
         .statement,
         db.bind)
 
-    df["data_date"] = df["data_date"].apply(
-        lambda row: remove_microseconds(row))
     if not df.empty:
+        df["data_date"] = df["data_date"].apply(
+            lambda row: remove_microseconds(row))
         df['data_date'] = df['data_date'] - \
             pd.to_timedelta(df['data_date'].dt.second, unit='s')
+        df['data_date'] = df['data_date'].apply(
+            lambda row: adjust_data_date_by_freq(row, freq))
+
     df = pd.pivot_table(df, values='data_value', index=[
                         'gen_id', 'data_date'], columns='data_type_id')
     df.rename(columns=data_type_names, inplace=True)
@@ -158,7 +167,7 @@ def get_gen_datas_grouped(db: Session, cli_id: int, gen_ids: list, datetime_star
     return df
 
 
-def get_sta_datas_grouped(db: Session, cli_id: int, sta_id: int, datetime_start, datetime_end, data_type_names: Dict[int, str]) -> pd.DataFrame:
+def get_sta_datas_grouped(db: Session, cli_id: int, sta_id: int, datetime_start, datetime_end, freq: str, data_type_names: Dict[int, str]) -> pd.DataFrame:
     """
     Get data for multiple data types grouped by date_time.
     """
@@ -174,10 +183,14 @@ def get_sta_datas_grouped(db: Session, cli_id: int, sta_id: int, datetime_start,
         .filter(StaData.data_date >= datetime_start)
         .statement,
         db.bind)
-    df["data_date"] = df["data_date"].apply(
-        lambda row: remove_microseconds(row))
+
     if not df.empty:
+        df["data_date"] = df["data_date"].apply(
+            lambda row: remove_microseconds(row))
         df['data_date'] = df['data_date'] - pd.to_timedelta(df['data_date'].dt.second, unit='s')
+        df['data_date'] = df['data_date'].apply(
+            lambda row: adjust_data_date_by_freq(row, freq))
+
     result = pd.DataFrame()
     result['data_date'] = df['data_date']
     result['sta_id'] = df['sta_id']

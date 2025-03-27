@@ -191,7 +191,7 @@ def test_get_gen_datas_grouped():
             "data_type_id": [1, 2, 1, 2, 1, 2]
         })
 
-        df = get_gen_datas_grouped(session, cli_id, gen_ids, datetime_start, datetime_end, data_type_names)
+        df = get_gen_datas_grouped(session, cli_id, gen_ids, datetime_start, datetime_end, '15T', data_type_names)
 
         assert df.shape == (3, 3)
         assert df.columns.tolist() == ["data_type_1", "data_type_2", "extra_column"]
@@ -242,7 +242,7 @@ def test_get_sta_datas_grouped():
             "data_type_id": [1, 2, 1, 2, 1, 2]
         })
 
-        df = get_sta_datas_grouped(session, cli_id, sta_id, datetime_start, datetime_end, data_type_names)
+        df = get_sta_datas_grouped(session, cli_id, sta_id, datetime_start, datetime_end, '15T', data_type_names)
 
         assert df.shape == (1, 3)
         assert df.columns.tolist() == ["data_type_1", "data_type_2", "extra_column"]
