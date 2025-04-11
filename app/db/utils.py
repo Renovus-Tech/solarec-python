@@ -451,3 +451,51 @@ def insert_or_update_predictions(db: Session, cli_id: int, gen_id: int, predicti
 
     db.execute(update_stmt)
     db.commit()
+
+
+def get_gens_data_availability(db: Session, gen_ids: List[int], datetime_start, datetime_end, data_type_names: Dict[int, str], group_by: str) -> pd.DataFrame:
+    valid_frequencies = {'hour', 'day', 'week', 'month', 'year'}
+    if group_by not in valid_frequencies:
+        raise ValueError(f"Invalid group_by value. Must be one of {valid_frequencies}")
+
+    trunc_function = func.date_trunc(group_by, GenData.data_date).label('period')
+    query = (
+        session.query(
+            GenData.gen_id,
+            GenData.data_type_id,
+            trunc_function,
+            func.count().label('data_count')
+        )
+        .filter(
+            GenData.gen_id.in_(gen_ids),
+            GenData.data_type_id.in_(data_type_names.keys()),
+            GenData.data_date >= datetime_start,
+            GenData.data_date < (datetime_end + datetime.timedelta(seconds=1))
+        )
+        .group_by(
+            GenData.gen_id,
+            GenData.data_type_id,
+            trunc_function
+        )
+    )
+
+    df = pd.read_sql(query.statement, session.bind)
+
+    periods = pd.date_range(datetime_start, datetime_end, freq=f'1{group_by[0].upper()}')
+    full_index = pd.MultiIndex.from_product(
+        [gen_ids, data_type_names.keys(), periods],
+        names=['gen_id', 'data_type_id', 'period']
+    )
+    full_df = pd.DataFrame(index=full_index).reset_index()
+
+    merged_df = full_df.merge(df, on=['gen_id', 'data_type_id', 'period'], how='left').fillna(0)
+
+    result_df = merged_df.pivot_table(
+        values='data_count',
+        index=['gen_id', 'period'],
+        columns='data_type_id'
+    )
+
+    result_df.rename(columns=data_type_names, inplace=True)
+
+    return result_df
