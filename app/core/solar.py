@@ -1,9 +1,13 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
-from fastapi import HTTPException
+
 import numpy as np
 import pandas as pd
-from db.utils import get_gen_codes_and_names, get_gen_datas_grouped, get_gen_ids_by_loc_id, get_period_end, get_sta_datas_grouped, get_sta_id_by_loc_id, get_loc_output_capacity, insert_cli_gen_alerts
+from db.utils import (get_gen_codes_and_names, get_gen_datas_grouped,
+                      get_gen_ids_by_loc_id, get_loc_output_capacity,
+                      get_period_end, get_sta_datas_grouped,
+                      get_sta_id_by_loc_id, insert_cli_gen_alerts)
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 
@@ -104,27 +108,12 @@ class Solar():
         self.gen_data['ac_production_prediction'] = self.gen_data[['ac_production_prediction']].apply(self._adjust_row_gen_units, axis=1)
 
     def _adjust_row_gen_units(self, row):
-        row_start_date = row.name[1]
-        row_end_date = get_period_end(row_start_date, self.data_freq, self.datetime_end)
-        seconds_in_one_hour = 60*60
-        seconds_in_row_period = (row_end_date - row_start_date).total_seconds() + 1
-        divisor = seconds_in_one_hour / seconds_in_row_period
         row_value = row[0]
         if row_value is not None:
-            return row_value / divisor / 1000
+            return row_value / 1000
 
     def _adjust_sta_units(self):
         self.sta_data['irradiation'] = self.sta_data[['irradiation']].apply(self._adjust_row_sta_units, axis=1)
-
-    def _adjust_row_sta_units(self, row):
-        row_start_date = row.name[0]
-        row_end_date = get_period_end(row_start_date, self.data_freq, self.datetime_end)
-        seconds_in_one_hour = 60*60
-        seconds_in_row_period = (row_end_date - row_start_date).total_seconds() + 1
-        divisor = seconds_in_one_hour / seconds_in_row_period
-        row_value = row[0]
-        if row_value is not None:
-            return row_value / divisor
 
     def _compute_calculated_columns(self):
         self.data['from'] = self.data.index.get_level_values(1)

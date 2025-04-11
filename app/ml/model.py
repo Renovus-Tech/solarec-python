@@ -1,13 +1,15 @@
 
 import datetime
 from typing import List, Optional, Tuple
-import pandas as pd
-import numpy as np
-import pytz
+
 import joblib
+import numpy as np
+import pandas as pd
+import pytz
+from db.utils import (get_gen_data, get_gen_ids_by_data_pro_id, get_location,
+                      get_sta_data, insert_or_update_predictions)
 from pysolar.solar import *
 from sqlalchemy import Float
-from db.utils import get_gen_data, get_gen_ids_by_data_pro_id, get_location, get_sta_data, insert_or_update_predictions
 from sqlalchemy.orm import Session
 
 TARGET_COLUMN = 'Generated Power'
@@ -26,7 +28,7 @@ class Model:
         joblib.dump(self, path)
 
     def generate_input(self, loc_latitude: int, loc_longitude: int, data: pd.DataFrame) -> pd.DataFrame:
-        data['Generated Power'] = data['Generated Power'] * 1000
+        data['Generated Power'] = data['Generated Power'] * 1000 * 4
         data['Shortwave Radiation'] = data['Shortwave Radiation'] * 1000
         data = add_calculated_features(data, loc_latitude, loc_longitude)
         data = data[self.features]
@@ -41,7 +43,7 @@ class Model:
         prediction = self.y_scaler.inverse_transform(prediction.reshape(-1, 1))
         prediction = prediction * self.prediction_capacity / self.trained_capacity
         prediction = np.where(prediction < 0, 0, prediction)
-        prediction = prediction / 1000
+        prediction = prediction / 4000
         prediction = np.round(prediction, 3)
         prediction = [x[0] for x in prediction]
         return pd.DataFrame(prediction, index=indexes, columns=['Prediction'])
