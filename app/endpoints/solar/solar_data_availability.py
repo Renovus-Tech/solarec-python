@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 router = APIRouter(
-    prefix="/data_availability",
+    prefix="/solar/data_availability",
     tags=["data_availability"],
     responses={400: {"description": "Could not get data availability"}},
 )
