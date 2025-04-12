@@ -1,10 +1,15 @@
-from endpoints.solar import solar_overview, solar_climate, solar_performance, solar_power_curve, solar_alerts, solar_emissions, solar_certificates, solar_sales, solar_anomaly_detection
 import logging
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-import uvicorn
 from urllib.parse import unquote
+
+import uvicorn
+from endpoints.solar import (solar_alerts, solar_anomaly_detection,
+                             solar_certificates, solar_climate,
+                             solar_data_availability, solar_emissions,
+                             solar_overview, solar_performance,
+                             solar_power_curve, solar_sales)
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('root')
@@ -17,6 +22,7 @@ async def unicorn_exception_handler(request: Request, exc: Exception):
     params = unquote(request.url.query)
     logger.error("Endpoint: %s\nParams: %s\nError: %s",
                  request_url, params, exc, exc_info=True)
+    print(f"Endpoint: {request_url}\nParams: {params}\nError: {exc}")
     return JSONResponse(
         status_code=500,
         content=jsonable_encoder(
@@ -47,6 +53,7 @@ app.include_router(solar_emissions.router)
 app.include_router(solar_certificates.router)
 app.include_router(solar_sales.router)
 app.include_router(solar_anomaly_detection.router)
+app.include_router(solar_data_availability.router)
 # app.include_router(solar_onboard_location.router)
 
 if __name__ == "__main__":

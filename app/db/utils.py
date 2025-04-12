@@ -3,13 +3,13 @@ import time
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
-from sqlalchemy.orm import Session
 import sqlalchemy.dialects.postgresql as pq
-from sqlalchemy.sql import func
-from sqlalchemy.sql.expression import extract
 from dateutil.relativedelta import SU, relativedelta
 from db.models import (CliGenAlert, CliSetting, CtrData, GenData, Generator,
                        Location, StaData, Station)
+from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
+from sqlalchemy.sql.expression import extract
 
 
 def get_group_period_end_date(rows, freq, datetime_end):
@@ -38,7 +38,7 @@ def get_period_end(datetime_start, freq, end_date):
             relativedelta(months=1, day=1, days=-1,
                           hour=23, minute=59, second=59)
 
-    if freq == "1Y":
+    if freq == "1Y" or freq == "1YS":
         period_end = datetime.datetime(datetime_start.year, 12, 31, 23, 59, 59)
 
     if freq == "15T":
@@ -62,10 +62,10 @@ def group_by_to_pd_frequency(group_by):
         return "1W"
 
     if group_by == "month":
-        return "1M"
+        return "1MS"
 
     if group_by == "year":
-        return "1Y"
+        return "1YS"
 
 
 def data_freq_to_pd_frequency(frqNumber: int, frqUnit: str) -> str:
@@ -86,7 +86,7 @@ def data_freq_to_pd_frequency(frqNumber: int, frqUnit: str) -> str:
         return f"{frqNumber}MS"
 
     if frqUnit == 'y':
-        return f"{frqNumber}Y"
+        return f"{frqNumber}YS"
 
     return None
 
@@ -280,6 +280,10 @@ def get_gen_ids_by_loc_id(db: Session, loc_id: int):
     return df
 
 
+def get_gen_id_by_loc_id(db: Session, loc_id: int) -> int:
+    return int(get_gen_ids_by_loc_id(db, loc_id)['gen_id_auto'].values[0])
+
+
 def get_sta_id_by_loc_id(db: Session, loc_id: int):
     df = pd.read_sql(db.query(Station.sta_id_auto)
                      .filter(Station.loc_id == loc_id)
@@ -453,49 +457,83 @@ def insert_or_update_predictions(db: Session, cli_id: int, gen_id: int, predicti
     db.commit()
 
 
-def get_gens_data_availability(db: Session, gen_ids: List[int], datetime_start, datetime_end, data_type_names: Dict[int, str], group_by: str) -> pd.DataFrame:
+def get_gen_data_count(db: Session, loc_id: int, datetime_start, datetime_end, data_types: List[int], group_by: str) -> pd.DataFrame:
     valid_frequencies = {'hour', 'day', 'week', 'month', 'year'}
     if group_by not in valid_frequencies:
         raise ValueError(f"Invalid group_by value. Must be one of {valid_frequencies}")
 
     trunc_function = func.date_trunc(group_by, GenData.data_date).label('period')
     query = (
-        session.query(
-            GenData.gen_id,
+        db.query(
             GenData.data_type_id,
             trunc_function,
             func.count().label('data_count')
         )
         .filter(
-            GenData.gen_id.in_(gen_ids),
-            GenData.data_type_id.in_(data_type_names.keys()),
+            Generator.loc_id == loc_id,
+            GenData.data_type_id.in_(data_types),
             GenData.data_date >= datetime_start,
             GenData.data_date < (datetime_end + datetime.timedelta(seconds=1))
         )
+        .join(
+            Generator,
+            Generator.gen_id_auto == GenData.gen_id)
         .group_by(
-            GenData.gen_id,
             GenData.data_type_id,
             trunc_function
         )
     )
 
-    df = pd.read_sql(query.statement, session.bind)
+    return pd.read_sql(query.statement, db.bind)
 
-    periods = pd.date_range(datetime_start, datetime_end, freq=f'1{group_by[0].upper()}')
-    full_index = pd.MultiIndex.from_product(
-        [gen_ids, data_type_names.keys(), periods],
-        names=['gen_id', 'data_type_id', 'period']
+
+def get_sta_data_count(db: Session, loc_id: int, datetime_start, datetime_end, data_types: List[int], group_by: str) -> pd.DataFrame:
+    valid_frequencies = {'hour', 'day', 'week', 'month', 'year'}
+    if group_by not in valid_frequencies:
+        raise ValueError(f"Invalid group_by value. Must be one of {valid_frequencies}")
+
+    trunc_function = func.date_trunc(group_by, StaData.data_date).label('period')
+    query = (
+        db.query(
+            StaData.data_type_id,
+            trunc_function,
+            func.count().label('data_count')
+        )
+        .filter(
+            Station.loc_id == loc_id,
+            StaData.data_type_id.in_(data_types),
+            StaData.data_date >= datetime_start,
+            StaData.data_date < (datetime_end + datetime.timedelta(seconds=1))
+        )
+        .join(
+            Station,
+            Station.sta_id_auto == StaData.sta_id)
+        .group_by(
+            StaData.data_type_id,
+            trunc_function
+        )
     )
-    full_df = pd.DataFrame(index=full_index).reset_index()
 
-    merged_df = full_df.merge(df, on=['gen_id', 'data_type_id', 'period'], how='left').fillna(0)
+    return pd.read_sql(query.statement, db.bind)
 
-    result_df = merged_df.pivot_table(
-        values='data_count',
-        index=['gen_id', 'period'],
-        columns='data_type_id'
-    )
 
-    result_df.rename(columns=data_type_names, inplace=True)
+def get_expected_data_count_per_period(pd_freq: str, data_freq: str) -> int:
+    """
+    Calculate the expected data count per period based on the group by frequency and the data frequency.
+    # E.g. if pd_freq is '1H' and data_freq is '15T', then the expected count is 4
+    """
 
-    return result_df
+    if pd_freq == '1M' or pd_freq == '1MS':
+        pd_freq_seconds = 30 * 24 * 60 * 60
+    elif pd_freq == '1YS' or pd_freq == '1Y':
+        pd_freq_seconds = 365 * 24 * 60 * 60
+    else:
+        pd_freq_seconds = int(pd.to_timedelta(pd_freq).total_seconds())
+
+    if data_freq == '1M' or data_freq == '1MS':
+        data_freq_seconds = 30 * 24 * 60 * 60
+    elif data_freq == '1YS' or data_freq == '1Y':
+        data_freq_seconds = 365 * 24 * 60 * 60
+    else:
+        data_freq_seconds = int(pd.to_timedelta(data_freq).total_seconds())
+    return int(pd_freq_seconds / data_freq_seconds)
