@@ -517,18 +517,13 @@ def get_sta_data_count(db: Session, loc_id: int, datetime_start, datetime_end, d
     return pd.read_sql(query.statement, db.bind)
 
 
-def get_expected_data_count_per_period(pd_freq: str, data_freq: str) -> int:
+def get_expected_data_count_per_period(period_start: datetime.datetime, datetime_end: datetime.datetime,  pd_freq: str, data_freq: str) -> int:
     """
     Calculate the expected data count per period based on the group by frequency and the data frequency.
     # E.g. if pd_freq is '1H' and data_freq is '15T', then the expected count is 4
     """
-
-    if pd_freq == '1M' or pd_freq == '1MS':
-        pd_freq_seconds = 30 * 24 * 60 * 60
-    elif pd_freq == '1YS' or pd_freq == '1Y':
-        pd_freq_seconds = 365 * 24 * 60 * 60
-    else:
-        pd_freq_seconds = int(pd.to_timedelta(pd_freq).total_seconds())
+    period_end = get_period_end(period_start, pd_freq, datetime_end) + datetime.timedelta(seconds=1)
+    period_seconds = int((period_end - period_start).total_seconds())
 
     if data_freq == '1M' or data_freq == '1MS':
         data_freq_seconds = 30 * 24 * 60 * 60
@@ -536,4 +531,4 @@ def get_expected_data_count_per_period(pd_freq: str, data_freq: str) -> int:
         data_freq_seconds = 365 * 24 * 60 * 60
     else:
         data_freq_seconds = int(pd.to_timedelta(data_freq).total_seconds())
-    return int(pd_freq_seconds / data_freq_seconds)
+    return int(period_seconds / data_freq_seconds)

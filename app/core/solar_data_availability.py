@@ -24,9 +24,8 @@ def _get_data_availability(count_df: pd.DataFrame, datetime_start: datetime, dat
     # Merge the actual data with the periods to fill in the missing gaps in the data
     df = all_periods.merge(count_df, on=['data_type_id', 'period'], how='left').fillna(0)
 
-    # TODO Expected count should vary based on month length
-    expected_count_per_period = get_expected_data_count_per_period(pd_freq, data_freq)
-    df['data_availability_pct'] = df['data_count'] / expected_count_per_period * 100
+    df['expected_count'] = df.apply(lambda row: get_expected_data_count_per_period(row['period'], datetime_end, pd_freq, data_freq), axis=1)
+    df['data_availability_pct'] = df['data_count'] / df['expected_count'] * 100
 
     df = df.pivot_table(
         values='data_availability_pct',
@@ -39,7 +38,7 @@ def _get_data_availability(count_df: pd.DataFrame, datetime_start: datetime, dat
         lambda x: get_period_end(x['from'], pd_freq, datetime_end), axis=1)
 
     # The resulting df will look like this:
-    # period               power from                 to
+    # from               power from                 to
     # 2024-07-01 00:00:00  100.0 2024-07-01 00:00:00 2024-07-01 00:59:59
     # 2024-07-01 01:00:00  100.0 2024-07-01 01:00:00 2024-07-01 01:59:59
     # 2024-07-01 02:00:00  100.0 2024-07-01 02:00:00 2024-07-01 02:59:59
@@ -57,6 +56,8 @@ def calculate_data_availability(db: Session, loc_id: int, datetime_start: dateti
     sta_data_availability = _get_data_availability(sta_data_count_df, datetime_start, datetime_end, {503: 'temperature', 505: 'irradiation'}, pd_freq, data_freq)
 
     # Merge the data availability for gen and sta by index
+    if gen_data_availability.empty or sta_data_availability.empty:
+        return pd.DataFrame()
     data_availability = gen_data_availability.merge(sta_data_availability, on=['from', 'to'], how='outer')
 
     return data_availability
