@@ -167,7 +167,7 @@ def get_gen_datas_grouped(db: Session, cli_id: int, gen_ids: list, datetime_star
     return df
 
 
-def get_sta_datas_grouped(db: Session, cli_id: int, sta_id: int, datetime_start, datetime_end, freq: str, data_type_names: Dict[int, str]) -> pd.DataFrame:
+def get_sta_datas_grouped(db: Session, cli_id: int, sta_id: int, datetime_start, datetime_end, data_freq: str, data_type_names: Dict[int, str]) -> pd.DataFrame:
     """
     Get data for multiple data types grouped by date_time.
     """
@@ -189,7 +189,7 @@ def get_sta_datas_grouped(db: Session, cli_id: int, sta_id: int, datetime_start,
             lambda row: remove_microseconds(row))
         df['data_date'] = df['data_date'] - pd.to_timedelta(df['data_date'].dt.second, unit='s')
         df['data_date'] = df['data_date'].apply(
-            lambda row: adjust_data_date_by_freq(row, freq))
+            lambda row: adjust_data_date_by_freq(row, data_freq))
 
     result = pd.DataFrame()
     result['data_date'] = df['data_date']
@@ -302,11 +302,14 @@ def get_gen_codes_and_names(db: Session, gen_ids: List[int]):
 
 
 def get_loc_output_capacity(db: Session, locId: int):
-    return (
+    capacity = (
         db.query(Location.loc_output_capacity)
         .filter(Location.loc_id_auto == locId)
-        .first()[0]
+        .first()
     )
+    if capacity is None:
+        raise ValueError(f"Location capacity not found for locId {locId}")
+    return capacity[0]
 
 
 def get_client_settings(db: Session, cli_id: int):
@@ -410,20 +413,27 @@ def get_gen_data(db: Session, cli_id, gen_id, start_date, end_date) -> pd.DataFr
     return df
 
 
-def get_sta_data(db: Session, cli_id, loc_id, start_date, end_date) -> pd.DataFrame:
-    sta_id = db.query(Station.sta_id_auto).filter(Station.cli_id == cli_id, Station.loc_id == loc_id).first()[0]
+def get_sta_data(db: Session, cli_id, loc_id, start_date, end_date, data_freq='15T', data_type_names={503: 'Temperature', 507: 'Precipitation Total', 506: 'Cloud Cover Total', 505: 'Shortwave Radiation'}) -> pd.DataFrame:
+    sta_id_query = db.query(Station.sta_id_auto).filter(Station.cli_id == cli_id, Station.loc_id == loc_id).first()
+    if sta_id_query is None or len(sta_id_query) == 0:
+        raise ValueError(f"No station found for cli_id {cli_id} and loc_id {loc_id}")
+    sta_id = sta_id_query[0]
     df = pd.read_sql(db.query(StaData.data_date, StaData.data_type_id, StaData.data_value)
                      .filter(StaData.cli_id == cli_id,
                              StaData.sta_id == sta_id,
                              StaData.data_date >= start_date,
                              StaData.data_date < end_date,
-                             StaData.data_type_id.in_([503, 505, 506, 507]))
+                             StaData.data_type_id.in_(data_type_names.keys()))
                      .statement, db.bind)
-    df["data_date"] = df["data_date"].apply(
-        lambda row: remove_microseconds(row))
+    if not df.empty:
+        df["data_date"] = df["data_date"].apply(
+            lambda row: remove_microseconds(row))
+        df['data_date'] = df['data_date'] - \
+            pd.to_timedelta(df['data_date'].dt.second, unit='s')
+        df['data_date'] = df['data_date'].apply(
+            lambda row: adjust_data_date_by_freq(row, data_freq))
 
     df = pd.pivot_table(df, values='data_value', index=['data_date'], columns='data_type_id')
-    data_type_names = {503: 'Temperature', 507: 'Precipitation Total', 506: 'Cloud Cover Total', 505: 'Shortwave Radiation'}
     df.rename(columns=data_type_names, inplace=True)
 
     return df

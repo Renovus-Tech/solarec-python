@@ -5,8 +5,8 @@ import uvicorn
 from endpoints.solar import (solar_alerts, solar_anomaly_detection,
                              solar_certificates, solar_climate,
                              solar_data_availability, solar_emissions,
-                             solar_overview, solar_performance,
-                             solar_power_curve, solar_sales)
+                             solar_expected_power, solar_overview,
+                             solar_performance, solar_power_curve, solar_sales)
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -54,7 +54,8 @@ app.include_router(solar_certificates.router)
 app.include_router(solar_sales.router)
 app.include_router(solar_anomaly_detection.router)
 app.include_router(solar_data_availability.router)
-# app.include_router(solar_onboard_location.router)
+app.include_router(solar_expected_power.router)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=5000)

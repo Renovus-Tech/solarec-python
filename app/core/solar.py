@@ -112,9 +112,6 @@ class Solar():
         if row_value is not None:
             return row_value / 1000
 
-    def _adjust_sta_units(self):
-        self.sta_data['irradiation'] = self.sta_data[['irradiation']].apply(self._adjust_row_sta_units, axis=1)
-
     def _compute_calculated_columns(self):
         self.data['from'] = self.data.index.get_level_values(1)
         self.data['time_based_availability'] = (
@@ -151,7 +148,6 @@ class Solar():
                                               503: 'avg_ambient_temp', 504: 'avg_module_temp', 505: 'irradiation'})
 
         self._adjust_gen_units()
-        self._adjust_sta_units()
         self._fill_missing_gen_data()
         self._fill_missing_sta_data()
 
