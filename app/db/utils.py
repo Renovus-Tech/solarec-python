@@ -359,30 +359,34 @@ def get_gen_ids_by_data_pro_id(db: Session, data_pro_id: int) -> Tuple[int, int,
     return cli_id[0], loc_id[0], gen_ids, min_date, max_date
 
 
-def get_co2_emissions_tons_per_Mwh(db: Session, loc_id: int, datetime_start: datetime.datetime) -> float:
-    year = datetime_start.year
-    years_to_check = [year - 1, year - 2, year - 3]
-
+def get_co2_emissions_tons_per_Mwh(db: Session, loc_id: int, datetime_start: datetime.datetime, datetime_end: datetime.datetime, freq: str) -> pd.DataFrame:
     query = (
-        db.query(
-            extract('year', CtrData.data_date).label("year"),
-            func.avg(CtrData.data_value).label("avg_co2")
-        )
+        db.query(CtrData.data_value, extract('year', CtrData.data_date).label('year'))
         .join(Location, Location.ctr_id == CtrData.ctr_id)
         .filter(Location.loc_id_auto == loc_id)
         .filter(CtrData.data_type_id == 901)
-        .filter(extract('year', CtrData.data_date).in_(years_to_check))
-        .group_by(extract('year', CtrData.data_date))
+        .order_by(CtrData.data_date.desc())
     )
+    df = pd.read_sql(query.statement, db.bind)
+    df['year'] = df['year'].astype(int)
+    all_time = pd.date_range(datetime_start, datetime_end, freq=freq)
 
-    results = db.execute(query).fetchall()
+    if df.empty:
+        result = pd.DataFrame({'data_time': all_time, 'data_value': 0})
+    else:
+        result = pd.DataFrame()
 
-    if not results:
-        return 0.0
+        for time in all_time:
+            # For each year, the value is the average of the last available 3 years from df
+            year = int(time.year)
+            last_3_years = df[df['year'] <= year].tail(3)
+            value = last_3_years['data_value'].mean() if not last_3_years.empty else 0
+            result = pd.concat([result, pd.DataFrame({
+                'data_time': [time],
+                'data_value': [value]
+            })], ignore_index=True)
 
-    valid_averages = [row.avg_co2 for row in results if row.avg_co2 is not None]
-    average = sum(valid_averages) / len(valid_averages) if valid_averages else 0.0
-    return average / 1000  # Convert from g/kWh to t/MWh
+    return result.set_index('data_time')
 
 
 def get_location(db: Session, loc_id: int, cli_id: int) -> Location:

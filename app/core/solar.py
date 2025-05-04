@@ -197,7 +197,7 @@ class Solar():
             return
 
         agg = {'power': 'sum', 'ac_production': 'sum', 'avg_ambient_temp': 'mean', 'avg_module_temp': 'mean',
-               'irradiation': 'mean', 'from': 'first', 'time_based_availability': 'mean', 'performance_ratio': 'mean', 'specific_yield': 'sum',
+               'irradiation': 'sum', 'from': 'first', 'time_based_availability': 'mean', 'performance_ratio': 'mean', 'specific_yield': 'sum',
                'ac_production_prediction': 'sum'}
 
         self.data_aggregated_by_loc_and_period = self.data_aggregated_by_period.groupby(

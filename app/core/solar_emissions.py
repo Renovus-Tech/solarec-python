@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
-from sqlalchemy.orm import Session
+
 import numpy as np
 import pandas as pd
 from core.solar import Solar
-from db.utils import get_client_settings, get_co2_emissions_tons_per_Mwh, get_group_period_end_date
+from db.utils import (get_client_settings, get_co2_emissions_tons_per_Mwh,
+                      get_group_period_end_date)
+from sqlalchemy.orm import Session
 
 
 def calculate_co2_avoided(db: Session, cli_id: int, loc_id: int, datetime_start: datetime, datetime_end: datetime, freq: str, data_freq: str) -> pd.DataFrame:
@@ -14,7 +16,7 @@ def calculate_co2_avoided(db: Session, cli_id: int, loc_id: int, datetime_start:
     if solar.data is None:
         return None
 
-    co2_per_mwh = get_co2_emissions_tons_per_Mwh(db, solar.loc_id, datetime_start)
+    co2_per_mwh = get_co2_emissions_tons_per_Mwh(db, solar.loc_id, datetime_start, datetime_end, freq)
     client_settings = get_client_settings(db, cli_id)
 
     cert_sold_pct = int(client_settings.loc['certSoldPorcentage']['cli_set_value']) / 100 if 'certSoldPorcentage' in client_settings.index else 0

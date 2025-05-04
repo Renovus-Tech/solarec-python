@@ -1,12 +1,14 @@
 import json
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
-from db.db import get_db
-from db.utils import data_freq_to_pd_frequency, group_by_to_pd_frequency, pandas_frequency_to_timedelta
-from fastapi import APIRouter, Depends, HTTPException
-from dateutil.parser import parse
-from pydantic import BaseModel, Field
+
 from core.solar import Solar
+from dateutil.parser import parse
+from db.db import get_db
+from db.utils import (data_freq_to_pd_frequency, group_by_to_pd_frequency,
+                      pandas_frequency_to_timedelta)
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -56,7 +58,7 @@ class Request(BaseModel):
     end_date: datetime
     client: int
     location: int
-    generators: List[int]
+    generators: Optional[List[int]] = None
     freq: Optional[str]
     group_by: Optional[str]
     data_freq: Optional[str] = '15T'
@@ -69,7 +71,7 @@ def parse_request(param_json) -> Request:
                      yearfirst=True) + timedelta(days=1, seconds=-1)
     client = params['client']
     location = params['location']
-    generators = params['generators']
+    generators = params.get('generators')
     group_by = params.get('groupBy')
     freq = None
     if group_by:
@@ -116,7 +118,7 @@ def performance(param_json, db: Session = Depends(get_db)):
 
     for date, row in solar.data_aggregated_by_loc_and_period.iterrows():
         gen_datas = []
-        for gen_id in request.generators:
+        for gen_id in request.generators if request.generators else solar.gen_ids:
             gen_row = solar.data_aggregated_by_period.loc[gen_id, date]
             gen_code_and_name = solar.gen_codes_and_names.loc[gen_id]
             gen_code = gen_code_and_name['gen_code']
