@@ -380,7 +380,7 @@ def get_co2_emissions_tons_per_Mwh(db: Session, loc_id: int, datetime_start: dat
             # For each year, the value is the average of the last available 3 years from df
             year = int(time.year)
             last_3_years = df[df['year'] <= year].tail(3)
-            value = last_3_years['data_value'].mean() if not last_3_years.empty else 0
+            value = last_3_years['data_value'].mean() / 1000 if not last_3_years.empty else 0
             result = pd.concat([result, pd.DataFrame({
                 'data_time': [time],
                 'data_value': [value]
