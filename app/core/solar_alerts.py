@@ -1,11 +1,12 @@
-from datetime import datetime
 import json
+from datetime import datetime
 from typing import List, Optional, Tuple
 
-from fastapi import HTTPException
 import numpy as np
 from core.solar import Solar
-from db.utils import get_client_settings, get_gen_ids_by_data_pro_id, insert_cli_gen_alerts
+from db.utils import (get_client_settings, get_gen_ids_by_data_pro_id,
+                      insert_cli_gen_alerts)
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 ALERT_DATA_TYPE = 1
@@ -27,8 +28,8 @@ def calculate_alerts(db: Session, datetime_start: Optional[datetime], datetime_e
     if cli_id is None or loc_id is None:
         raise HTTPException(status_code=400, detail='data_pro_id not found')
 
-    solar = Solar(cli_id=cli_id, loc_id=loc_id, datetime_start=datetime_start, datetime_end=datetime_end, freq='1D', gen_ids=gen_ids, sta_id=None)
-    solar.fetch_aggregated_by_period()
+    solar = Solar(db, cli_id=cli_id, loc_id=loc_id, datetime_start=datetime_start, datetime_end=datetime_end, freq='1D', gen_ids=gen_ids, sta_id=None)
+    solar.fetch_aggregated_by_period(db)
 
     if solar.data is None or solar.data.empty:
         return HTTPException(status_code=404, detail='No data found')
