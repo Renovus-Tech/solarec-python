@@ -118,6 +118,17 @@ class Solar():
             self.data['power'] == 0) & (self.data['irradiation'] > 0)
         self.data['count'] = 1
         self.data['is_missing'] = self.data['power'].isna()
+        self.data['capacity_factor'] = self.data.apply(
+            self._get_capacity_factor, axis=1)
+
+    def _get_capacity_factor(self, row):
+        row_start_date = row.name[1]
+        row_end_date = get_period_end(row_start_date, self.data_freq, self.datetime_end)
+        hours_in_period = (row_end_date - row_start_date).total_seconds() / 3600
+        production = row['ac_production']
+        if production is None or hours_in_period == 0 or self.loc_total_capacity == 0:
+            return 0
+        return production / (self.loc_total_capacity * hours_in_period / 1000)
 
     def _compute_agg_by_loc_and_period_calculated_columns(self):
         self.data_aggregated_by_loc_and_period['loc_specific_yield'] = self.data_aggregated_by_loc_and_period['ac_production'] / (
@@ -175,7 +186,7 @@ class Solar():
 
         agg = {'power': 'sum', 'ac_production': 'sum', 'avg_ambient_temp': 'mean', 'avg_module_temp': 'mean',
                'irradiation': 'sum', 'time_based_availability': self._get_agg_unavailable, 'from': 'first', 'count': 'sum', 'is_missing': 'sum',
-               'ac_production_prediction': 'sum'}
+               'ac_production_prediction': 'sum', 'capacity_factor': 'mean'}
 
         if self.freq:
             self.data_aggregated_by_period = self.data.reset_index().set_index(
@@ -198,7 +209,7 @@ class Solar():
 
         agg = {'power': 'sum', 'ac_production': 'sum', 'avg_ambient_temp': 'mean', 'avg_module_temp': 'mean',
                'irradiation': 'sum', 'from': 'first', 'time_based_availability': 'mean', 'performance_ratio': 'mean', 'specific_yield': 'sum',
-               'ac_production_prediction': 'sum'}
+               'ac_production_prediction': 'sum', 'capacity_factor': 'mean'}
 
         self.data_aggregated_by_loc_and_period = self.data_aggregated_by_period.groupby(
             'data_date').agg(agg)

@@ -1,13 +1,14 @@
 import json
 from datetime import datetime, timedelta
 from typing import List, Optional
-from sqlalchemy.orm import Session
-from db.db import get_db
-from db.utils import data_freq_to_pd_frequency
+
 from core.solar import Solar
 from dateutil.parser import parse
+from db.db import get_db
+from db.utils import data_freq_to_pd_frequency
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/solar/overview",
@@ -35,6 +36,7 @@ class Data(BaseModel):
     specificYield: float
     performanceRatio: float
     certificates: float
+    capacityFactor: float
 
 
 class Response(BaseModel):
@@ -99,6 +101,7 @@ def overview(param_json, db: Session = Depends(get_db)):
                 code=solar.gen_codes,
                 id=solar.gen_ids,
                 name=solar.gen_names,
-                certificates=ac_production)
+                certificates=ac_production,
+                capacityFactor=round(data['capacity_factor'] * 100, 1))
 
     return Response(chart=chart, data=[data])
