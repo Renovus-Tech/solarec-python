@@ -101,7 +101,7 @@ def calculate_alerts(db: Session, datetime_start: Optional[datetime], datetime_e
                                   "cli_gen_alert_data": json.dumps(alert_data), "cli_gen_alert_trigger": date})
 
         if alert['alert_4']:
-            description = f"Production on {date.strftime('%Y-%m-%d')} for generator {gen_code} was {alert['ac_production']:.3f} MW/h, which is {alert['production_diff_percentage']:.0f}% lower than the predicted ({alert['ac_production_prediction']:.3f} MW/h)"
+            description = f"Production on {date.strftime('%Y-%m-%d')} for generator {gen_code} was {alert['ac_production']:.4f} MW/h, which is {100 - alert['production_diff_percentage']:.0f}% lower than the predicted ({alert['ac_production_prediction']:.4f} MW/h)"
             alert_data = {'type': 'alertProductionLowerThanPredicted', 'gen_code': gen_code, 'description:': description,
                           'value': alert['ac_production'], "predicted_value": alert['ac_production_prediction'], 'threshold': alert_4_threshold, "date": date.strftime('%Y-%m-%d'), "diff_percentage": round(alert['production_diff_percentage'], 2)}
             rows_to_insert.append({"cli_id": cli_id, "gen_id": gen_id, "cli_gen_alert_added": now, "cli_gen_alert_type": ALERT_DATA_TYPE,
