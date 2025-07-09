@@ -546,3 +546,100 @@ def get_expected_data_count_per_period(period_start: datetime.datetime, datetime
     else:
         data_freq_seconds = int(pd.to_timedelta(data_freq).total_seconds())
     return int(period_seconds / data_freq_seconds)
+
+
+def insert_irradiation_per_month(db: Session, start_date: datetime.datetime, end_date: datetime.datetime):
+    # - Toma la suma de la irradiación mensual de sta_data para sta_id=51, data_type_id=505, cli_id=83.
+    df = pd.read_sql(db.query(StaData.data_date, StaData.data_value)
+                     .filter(StaData.cli_id == 83,
+                             StaData.sta_id == 51,
+                             StaData.data_type_id == 505,
+                             StaData.data_date >= start_date,
+                             StaData.data_date < end_date)
+                     .statement, db.bind)
+    df["data_date"] = df["data_date"].apply(
+        lambda row: remove_microseconds(row))
+    df = df.groupby(pd.Grouper(key='data_date', freq='M')).sum().reset_index()
+    df['data_date'] = df['data_date'].apply(
+        lambda row: row.replace(hour=0, minute=0, second=0, microsecond=0))
+    df['data_value'] = df['data_value'].astype(float)
+
+    # Guarda esa suma, como un dato único por mes para sta_id=52, data_type_id=505, cli_id=84, data_pro_id=5030.
+    rows_to_insert = []
+    for index, row in df.iterrows():
+        rows_to_insert.append({
+            'cli_id': 84,
+            'sta_id': 52,
+            'data_date': start_date,
+            'data_type_id': 505,
+            'data_pro_id': 5030,
+            'data_value': row['data_value'],
+            'data_date_added': datetime.datetime.now()
+        })
+    if rows_to_insert:
+        insert_stmt = pq.insert(StaData).values(rows_to_insert)
+        db.execute(insert_stmt)
+        db.commit()
+
+
+def insert_production_per_month(db: Session, start_date: datetime.datetime, end_date: datetime.datetime):
+    # - Toma la irradiación mensual de sta_data, y calcula la producción y la inserta en gen_data para gen_id=43, cli_id=84 haciendo:
+    #       produccion_kwh = irradiación * capacidad_kw * 0.8
+    #       la capacidad_kw esta en location.loc_output_total_capacity para loc_id=55
+    loc_id = 55
+    gen_id = 43
+    capacity_kw = get_loc_output_capacity(db, loc_id)
+    df = pd.read_sql(db.query(StaData.data_date, StaData.data_value)
+                     .filter(StaData.cli_id == 84,
+                             StaData.sta_id == 52,
+                             StaData.data_type_id == 505,
+                             StaData.data_date >= start_date,
+                             StaData.data_date < end_date)
+                     .statement, db.bind)
+    df = df.groupby(pd.Grouper(key='data_date', freq='M')).sum().reset_index()
+    df["data_date"] = start_date
+    df['data_value'] = df['data_value'].astype(float)
+    df['data_value'] = round(df['data_value'] * capacity_kw * 0.8, 0)
+    df['data_type_id'] = 502
+    df['data_pro_id'] = 5030
+    df['cli_id'] = 84
+    df['gen_id'] = gen_id
+    df['data_date_added'] = datetime.datetime.now()
+    rows_to_insert = df.to_dict('records')
+    if rows_to_insert:
+        insert_stmt = pq.insert(GenData).values(rows_to_insert)
+        db.execute(insert_stmt)
+        db.commit()
+
+
+def get_date_intervals_without_data(db: Session, start_date: datetime.datetime, end_date: datetime.datetime) -> List[Tuple[datetime.datetime, datetime.datetime]]:
+    #     """ Check sta_data and gen_data for months without data.
+    #     Returns a list of tuples with start and end date of the intervals without data.
+    #     """
+    date_intervals = []
+    start_date = start_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    end_date = end_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1)
+
+    cli_id = 84
+    sta_id = 52
+    sta_data_df = pd.read_sql(
+        db.query(StaData.data_date)
+        .filter(StaData.cli_id == cli_id)
+        .filter(StaData.sta_id == sta_id)
+        .filter(StaData.data_type_id == 505)  # Shortwave Radiation
+        .filter(StaData.data_date >= start_date)
+        .filter(StaData.data_date <= end_date)
+        .statement,
+        db.bind
+    )
+
+    sta_data_df_by_month = sta_data_df.groupby(sta_data_df['data_date'].dt.to_period('M')).size().reset_index(name='count')
+    all_months_in_interval = pd.date_range(start=start_date, end=end_date, freq='MS').to_period('M')
+    missing_months = all_months_in_interval[~all_months_in_interval.isin(sta_data_df_by_month['data_date'])]
+    for month in missing_months:
+        start = month.start_time
+        end = month.end_time
+        date_intervals.append((start, end))
+
+    return date_intervals
